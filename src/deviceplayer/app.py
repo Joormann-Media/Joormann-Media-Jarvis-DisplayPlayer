@@ -156,6 +156,7 @@ class DevicePlayerApp:
 
                 transition = self._resolve_transition(item, plan, duration_ms)
                 transition_context = self._build_transition_context(plan, current_item, item, transition)
+                transition = self._effective_transition(transition, transition_context)
 
                 if current_frame is not None and self._has_active_transition(transition_context):
                     transition_from = current_frame
@@ -308,6 +309,27 @@ class DevicePlayerApp:
             'ms': clamp_transition_ms(duration_ms, int(tr.get('ms') or 0)),
         }
 
+    def _effective_transition(self, fallback_transition: dict, transition_context: dict | None) -> dict:
+        if not isinstance(transition_context, dict):
+            return fallback_transition
+
+        if bool(transition_context.get('split_per_zone')):
+            zones = transition_context.get('zones') if isinstance(transition_context.get('zones'), dict) else {}
+            max_zone_ms = 0
+            for key in ('A', 'B'):
+                zone_cfg = zones.get(key) if isinstance(zones.get(key), dict) else {}
+                t = str(zone_cfg.get('type') or 'none')
+                ms = max(0, int(zone_cfg.get('ms') or 0))
+                if can_animate(t) and ms > max_zone_ms:
+                    max_zone_ms = ms
+            if max_zone_ms > 0:
+                return {'type': 'split-per-zone', 'ms': max_zone_ms}
+            return fallback_transition
+
+        t = normalize_transition_name(str(transition_context.get('type') or fallback_transition.get('type') or 'none'))
+        ms = max(0, int(transition_context.get('ms') or fallback_transition.get('ms') or 0))
+        return {'type': t, 'ms': ms}
+
     def _build_transition_context(self, plan: dict, old_item: dict | None, new_item: dict | None, fallback_transition: dict) -> dict | None:
         if not isinstance(old_item, dict) or not isinstance(new_item, dict):
             return None
@@ -327,7 +349,6 @@ class DevicePlayerApp:
         old_zones = old_item.get('zones') if isinstance(old_item.get('zones'), dict) else {}
         new_zones = new_item.get('zones') if isinstance(new_item.get('zones'), dict) else {}
         zones_cfg = {}
-        differs = False
         has_active = False
         default_type = str(fallback_transition.get('type') or 'none')
         default_ms = int(fallback_transition.get('ms') or 0)
@@ -341,13 +362,12 @@ class DevicePlayerApp:
             zones_cfg[key] = {'type': t, 'ms': ms}
             has_active = has_active or (can_animate(t) and ms > 0)
 
-        differs = zones_cfg['A'] != zones_cfg['B']
-        split_per_zone = differs or (zones_cfg['A']['type'] == 'none' and zones_cfg['B']['type'] != 'none') or (zones_cfg['B']['type'] == 'none' and zones_cfg['A']['type'] != 'none')
         if not has_active and not (can_animate(default_type) and default_ms > 0):
             return None
 
         return {
-            'split_per_zone': split_per_zone,
+            # In split mode we always animate per zone; global transitions are full-mode only.
+            'split_per_zone': True,
             'old_item': old_item,
             'new_item': new_item,
             'zones': zones_cfg,
