@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import signal
 import time
 from pathlib import Path
@@ -31,16 +32,46 @@ class DevicePlayerApp:
         self.running = False
 
     def _init_screen(self) -> pygame.Surface:
-        pygame.init()
+        forced = os.getenv('SDL_VIDEODRIVER', '').strip()
+        configured = os.getenv('DEVICEPLAYER_VIDEO_DRIVERS', 'kmsdrm,fbcon,wayland,x11').strip()
+        candidates: list[str] = []
+        if forced:
+            candidates.append(forced)
+        for item in configured.split(','):
+            driver = item.strip()
+            if driver and driver not in candidates:
+                candidates.append(driver)
+        if not candidates:
+            candidates = ['kmsdrm', 'fbcon', 'wayland', 'x11']
+
         flags = pygame.FULLSCREEN if self.config.fullscreen else 0
-        if self.config.fullscreen:
-            info = pygame.display.Info()
-            size = (max(1, info.current_w), max(1, info.current_h))
-        else:
-            size = (self.config.window_width, self.config.window_height)
-        screen = pygame.display.set_mode(size, flags)
-        pygame.display.set_caption('Joormann Media DevicePlayer')
-        return screen
+        last_error: Exception | None = None
+
+        for driver in candidates:
+            try:
+                os.environ['SDL_VIDEODRIVER'] = driver
+                pygame.quit()
+                pygame.init()
+                if not pygame.display.get_init():
+                    pygame.display.init()
+
+                if self.config.fullscreen:
+                    info = pygame.display.Info()
+                    width = max(1, int(getattr(info, 'current_w', 0) or self.config.window_width))
+                    height = max(1, int(getattr(info, 'current_h', 0) or self.config.window_height))
+                    size = (width, height)
+                else:
+                    size = (self.config.window_width, self.config.window_height)
+
+                screen = pygame.display.set_mode(size, flags)
+                pygame.display.set_caption('Joormann Media DevicePlayer')
+                self.log.info('video backend initialized: requested=%s active=%s size=%sx%s', driver, pygame.display.get_driver(), size[0], size[1])
+                return screen
+            except Exception as exc:
+                last_error = exc
+                self.log.warning('video backend init failed for %s: %s', driver, exc)
+
+        raise RuntimeError(f'failed to initialize SDL video backend ({candidates}): {last_error}')
 
     def run(self) -> int:
         screen = self._init_screen()
