@@ -5,7 +5,7 @@ Eigenständiger HDMI-Player für kompakte Runtime-Manifeste aus dem Adminpanel.
 ## Unterstütztes Manifest
 
 - `layout.mode`: `full` | `split`
-- `layout.orientation`: `landscape` | `portrait`
+- `layout.orientation`: wird vom Player ignoriert (Assets sind serverseitig bereits vorbereitet)
 - `layout.direction`: `horizontal` | `vertical` (bei split)
 - `layout.ratioA`: 1..99 (bei split)
 - `defaults.durationMs`

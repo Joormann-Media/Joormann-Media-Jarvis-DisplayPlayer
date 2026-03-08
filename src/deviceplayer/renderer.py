@@ -60,14 +60,13 @@ class FrameRenderer:
     def fit_image(self, image: pygame.Surface, target_size: tuple[int, int]) -> pygame.Surface:
         return self._fit(image, target_size)
 
-    def orient_frame(self, frame: pygame.Surface, orientation: str) -> pygame.Surface:
-        return self._orient(frame, orientation)
+    def orient_frame(self, frame: pygame.Surface, orientation: str | None = None) -> pygame.Surface:
+        return frame
 
-    def render_full(self, image: pygame.Surface, orientation: str) -> pygame.Surface:
-        frame = self._fit(image, (self.screen_w, self.screen_h))
-        return self._orient(frame, orientation)
+    def render_full(self, image: pygame.Surface, orientation: str | None = None) -> pygame.Surface:
+        return self._fit(image, (self.screen_w, self.screen_h))
 
-    def render_split(self, image_a: pygame.Surface | None, image_b: pygame.Surface | None, direction: str, ratio_a: int, orientation: str) -> pygame.Surface:
+    def render_split(self, image_a: pygame.Surface | None, image_b: pygame.Surface | None, direction: str, ratio_a: int, orientation: str | None = None) -> pygame.Surface:
         frame = pygame.Surface((self.screen_w, self.screen_h)).convert()
         frame.fill((0, 0, 0))
 
@@ -90,12 +89,4 @@ class FrameRenderer:
                 part = self._fit(image_b, (b_w, self.screen_h))
                 frame.blit(part, (a_w, 0))
 
-        return self._orient(frame, orientation)
-
-    def _orient(self, frame: pygame.Surface, orientation: str) -> pygame.Surface:
-        is_portrait_target = str(orientation).lower() == 'portrait'
-        screen_is_portrait = self.screen_h >= self.screen_w
-        if is_portrait_target == screen_is_portrait:
-            return frame
-        rotated = pygame.transform.rotate(frame, 90)
-        return pygame.transform.smoothscale(rotated, (self.screen_w, self.screen_h))
+        return frame

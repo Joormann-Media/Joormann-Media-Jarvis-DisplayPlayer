@@ -233,7 +233,6 @@ class DevicePlayerApp:
         layout = plan['layout']
         assets = plan['assets']
         mode = str(layout.get('mode') or 'full')
-        orientation = str(layout.get('orientation') or 'landscape')
         if mode == 'split':
             zones = item.get('zones') if isinstance(item.get('zones'), dict) else {}
             zone_a = zones.get('A') if isinstance(zones.get('A'), dict) else {}
@@ -244,11 +243,11 @@ class DevicePlayerApp:
             ref_b = str(assets.get(key_b) or '')
             direction = str(layout.get('direction') or 'horizontal').lower()
             ratio = int(layout.get('ratioA') or 50)
-            return f'split|{orientation}|{direction}|{ratio}|{ref_a}|{ref_b}'
+            return f'split|{direction}|{ratio}|{ref_a}|{ref_b}'
 
         asset_key = str(item.get('asset') or '')
         asset_ref = str(assets.get(asset_key) or '')
-        return f'full|{orientation}|{asset_ref}'
+        return f'full|{asset_ref}'
 
     def _asset_surface(self, renderer: FrameRenderer, manifest_dir: Path, asset_key: str, assets_map: dict) -> pygame.Surface | None:
         if not asset_key:
@@ -277,7 +276,6 @@ class DevicePlayerApp:
         assets = plan['assets']
         layout = plan['layout']
         mode = layout.get('mode', 'full')
-        orientation = layout.get('orientation', 'landscape')
 
         if mode == 'split':
             zones = item.get('zones') if isinstance(item.get('zones'), dict) else {}
@@ -290,7 +288,6 @@ class DevicePlayerApp:
                 img_b,
                 str(layout.get('direction') or 'horizontal').lower(),
                 int(layout.get('ratioA') or 50),
-                orientation,
             )
             self._frame_cache[cache_key] = frame
             return frame
@@ -300,7 +297,7 @@ class DevicePlayerApp:
             empty = self._get_black_frame(renderer)
             self._frame_cache[cache_key] = empty
             return empty
-        frame = renderer.render_full(img, orientation)
+        frame = renderer.render_full(img)
         self._frame_cache[cache_key] = frame
         return frame
 
@@ -380,7 +377,6 @@ class DevicePlayerApp:
         layout = plan.get('layout') if isinstance(plan.get('layout'), dict) else {}
         direction = str(layout.get('direction') or 'horizontal').lower()
         ratio = max(1, min(99, int(layout.get('ratioA') or 50)))
-        orientation = str(layout.get('orientation') or 'landscape')
         manifest_dir = self.config.manifest_path.parent
         assets = plan.get('assets') if isinstance(plan.get('assets'), dict) else {}
 
@@ -409,7 +405,7 @@ class DevicePlayerApp:
         if zone_b is not None:
             frame.blit(zone_b, b_pos)
 
-        return renderer.orient_frame(frame, orientation)
+        return frame
 
     def _render_split_zone(self, renderer: FrameRenderer, manifest_dir: Path, assets: dict, old_zone_raw, new_zone_raw, zone_transition_raw, target_size: tuple[int, int], elapsed_s: float) -> pygame.Surface | None:
         old_zone = old_zone_raw if isinstance(old_zone_raw, dict) else {}

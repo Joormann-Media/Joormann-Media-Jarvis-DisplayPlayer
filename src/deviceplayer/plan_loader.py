@@ -46,11 +46,7 @@ def load_manifest(path: Path) -> dict:
     if mode not in {'full', 'split'}:
         raise ManifestError('layout.mode must be full or split')
 
-    orientation = str(layout.get('orientation') or 'landscape').strip().lower()
-    if orientation not in {'portrait', 'landscape'}:
-        orientation = 'landscape'
-
-    direction = str(layout.get('direction') or ('vertical' if orientation == 'portrait' else 'horizontal')).strip().lower()
+    direction = str(layout.get('direction') or 'horizontal').strip().lower()
     if direction not in {'vertical', 'horizontal'}:
         direction = 'horizontal'
 
@@ -109,7 +105,8 @@ def load_manifest(path: Path) -> dict:
     return {
         'layout': {
             'mode': mode,
-            'orientation': orientation,
+            # Orientation is pre-applied in admin/runtime assets; player always renders landscape.
+            'orientation': 'landscape',
             'direction': direction,
             'ratioA': ratio_a,
         },
