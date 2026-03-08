@@ -17,6 +17,10 @@ Eigenständiger HDMI-Player für kompakte Runtime-Manifeste aus dem Adminpanel.
 - `playlist`:
   - full: `[{ "asset": "assetX" }]`
   - split: `[{ "zones": { "A": {"asset":"..."}, "B": {"asset":"..."} } }]`
+  - optional bei split pro Zone:
+    - `zones.A.transition`: `{ "type": "...", "ms": ... }`
+    - `zones.B.transition`: `{ "type": "...", "ms": ... }`
+    - falls nicht gesetzt, wird `playlist[].transition` bzw. `defaults.transition` verwendet
 
 ## Start
 

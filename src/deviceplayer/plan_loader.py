@@ -20,6 +20,13 @@ def _as_list(value, field: str) -> list:
     return value
 
 
+def _normalize_transition_obj(value, fallback_type: str, fallback_ms: int) -> dict:
+    obj = value if isinstance(value, dict) else {}
+    t = str(obj.get('type') or fallback_type).strip().lower()
+    ms = max(0, int(obj.get('ms') or fallback_ms))
+    return {'type': t, 'ms': ms}
+
+
 def load_manifest(path: Path) -> dict:
     if not path.exists():
         raise ManifestError(f'manifest not found: {path}')
@@ -64,11 +71,7 @@ def load_manifest(path: Path) -> dict:
         row_duration = int(row.get('durationMs') or duration_ms)
         row_duration = max(1000, row_duration)
 
-        row_transition_raw = row.get('transition') if isinstance(row.get('transition'), dict) else {}
-        row_transition = {
-            'type': str(row_transition_raw.get('type') or transition_type).strip().lower(),
-            'ms': max(0, int(row_transition_raw.get('ms') or transition_ms)),
-        }
+        row_transition = _normalize_transition_obj(row.get('transition'), transition_type, transition_ms)
 
         if mode == 'full':
             asset_key = str(row.get('asset') or '').strip()
@@ -88,10 +91,12 @@ def load_manifest(path: Path) -> dict:
             asset_b = str(zone_b.get('asset') or '').strip()
             if not asset_a and not asset_b:
                 raise ManifestError(f'playlist[{idx}] requires zones.A.asset or zones.B.asset')
+            zone_a_transition = _normalize_transition_obj(zone_a.get('transition'), row_transition['type'], row_transition['ms'])
+            zone_b_transition = _normalize_transition_obj(zone_b.get('transition'), row_transition['type'], row_transition['ms'])
             normalized_playlist.append({
                 'zones': {
-                    'A': {'asset': asset_a, 'title': str(zone_a.get('title') or '')},
-                    'B': {'asset': asset_b, 'title': str(zone_b.get('title') or '')},
+                    'A': {'asset': asset_a, 'title': str(zone_a.get('title') or ''), 'transition': zone_a_transition},
+                    'B': {'asset': asset_b, 'title': str(zone_b.get('title') or ''), 'transition': zone_b_transition},
                 },
                 'durationMs': row_duration,
                 'transition': row_transition,

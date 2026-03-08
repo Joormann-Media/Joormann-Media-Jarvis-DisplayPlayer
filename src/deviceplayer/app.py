@@ -86,10 +86,12 @@ class DevicePlayerApp:
         cursor: PlaylistCursor | None = None
 
         current_frame = None
+        current_item = None
         next_switch_at = 0.0
         transition = {'type': 'none', 'ms': 0}
         transition_start = 0.0
         transition_from = None
+        transition_context = None
         frame_dirty = True
 
         while self.running:
@@ -118,8 +120,10 @@ class DevicePlayerApp:
                         self._black_frame = None
                         cursor = PlaylistCursor(plan['playlist'])
                         current_frame = None
+                        current_item = None
                         next_switch_at = 0.0
                         transition_from = None
+                        transition_context = None
                         frame_dirty = True
                     except ManifestError as exc:
                         if plan is not None:
@@ -150,19 +154,18 @@ class DevicePlayerApp:
                 duration_ms = int(item.get('durationMs') or plan['defaults']['durationMs'])
                 next_switch_at = now + (duration_ms / 1000.0)
 
-                tr = item.get('transition') if isinstance(item.get('transition'), dict) else plan['defaults']['transition']
-                transition = {
-                    'type': normalize_transition_name(str(tr.get('type') or 'none')),
-                    'ms': clamp_transition_ms(duration_ms, int(tr.get('ms') or 0)),
-                }
+                transition = self._resolve_transition(item, plan, duration_ms)
+                transition_context = self._build_transition_context(plan, current_item, item, transition)
 
-                if current_frame is not None and can_animate(str(transition['type'])) and transition['ms'] > 0:
+                if current_frame is not None and self._has_active_transition(transition_context):
                     transition_from = current_frame
                     transition_start = now
                     current_frame = new_frame
                 else:
                     transition_from = None
+                    transition_context = None
                     current_frame = new_frame
+                current_item = item
                 frame_dirty = True
 
             frame_to_show = current_frame
@@ -175,7 +178,20 @@ class DevicePlayerApp:
                     frame_to_show = current_frame
                     frame_dirty = True
                 else:
-                    frame_to_show = render_transition(str(transition['type']), transition_from, current_frame, progress)
+                    if (
+                        transition_context is not None
+                        and bool(transition_context.get('split_per_zone'))
+                    ):
+                        frame_to_show = self._render_split_zone_transition(
+                            renderer=renderer,
+                            plan=plan,
+                            old_item=transition_context.get('old_item') if isinstance(transition_context.get('old_item'), dict) else {},
+                            new_item=transition_context.get('new_item') if isinstance(transition_context.get('new_item'), dict) else {},
+                            elapsed_s=max(0.0, now - transition_start),
+                            zones=transition_context.get('zones') if isinstance(transition_context.get('zones'), dict) else {},
+                        )
+                    else:
+                        frame_to_show = render_transition(str(transition['type']), transition_from, current_frame, progress)
 
             if frame_to_show is not None and (frame_dirty or in_transition):
                 screen.blit(frame_to_show, (0, 0))
@@ -287,3 +303,137 @@ class DevicePlayerApp:
         frame = renderer.render_full(img, orientation)
         self._frame_cache[cache_key] = frame
         return frame
+
+    def _resolve_transition(self, item: dict, plan: dict, duration_ms: int) -> dict:
+        tr = item.get('transition') if isinstance(item.get('transition'), dict) else plan['defaults']['transition']
+        return {
+            'type': normalize_transition_name(str(tr.get('type') or 'none')),
+            'ms': clamp_transition_ms(duration_ms, int(tr.get('ms') or 0)),
+        }
+
+    def _build_transition_context(self, plan: dict, old_item: dict | None, new_item: dict | None, fallback_transition: dict) -> dict | None:
+        if not isinstance(old_item, dict) or not isinstance(new_item, dict):
+            return None
+
+        layout = plan.get('layout') if isinstance(plan.get('layout'), dict) else {}
+        mode = str(layout.get('mode') or 'full')
+        if mode != 'split':
+            return {
+                'split_per_zone': False,
+                'old_item': old_item,
+                'new_item': new_item,
+                'zones': {},
+                'type': str(fallback_transition.get('type') or 'none'),
+                'ms': int(fallback_transition.get('ms') or 0),
+            }
+
+        old_zones = old_item.get('zones') if isinstance(old_item.get('zones'), dict) else {}
+        new_zones = new_item.get('zones') if isinstance(new_item.get('zones'), dict) else {}
+        zones_cfg = {}
+        differs = False
+        has_active = False
+        default_type = str(fallback_transition.get('type') or 'none')
+        default_ms = int(fallback_transition.get('ms') or 0)
+
+        for key in ('A', 'B'):
+            zone_new = new_zones.get(key) if isinstance(new_zones.get(key), dict) else {}
+            transition = zone_new.get('transition') if isinstance(zone_new.get('transition'), dict) else {}
+            t = normalize_transition_name(str(transition.get('type') or default_type))
+            ms = int(transition.get('ms') or default_ms)
+            ms = max(0, ms)
+            zones_cfg[key] = {'type': t, 'ms': ms}
+            has_active = has_active or (can_animate(t) and ms > 0)
+
+        differs = zones_cfg['A'] != zones_cfg['B']
+        split_per_zone = differs or (zones_cfg['A']['type'] == 'none' and zones_cfg['B']['type'] != 'none') or (zones_cfg['B']['type'] == 'none' and zones_cfg['A']['type'] != 'none')
+        if not has_active and not (can_animate(default_type) and default_ms > 0):
+            return None
+
+        return {
+            'split_per_zone': split_per_zone,
+            'old_item': old_item,
+            'new_item': new_item,
+            'zones': zones_cfg,
+            'type': default_type,
+            'ms': default_ms,
+        }
+
+    def _has_active_transition(self, transition_context: dict | None) -> bool:
+        if transition_context is None:
+            return False
+
+        if bool(transition_context.get('split_per_zone')):
+            zones = transition_context.get('zones') if isinstance(transition_context.get('zones'), dict) else {}
+            for key in ('A', 'B'):
+                cfg = zones.get(key) if isinstance(zones.get(key), dict) else {}
+                t = str(cfg.get('type') or 'none')
+                ms = int(cfg.get('ms') or 0)
+                if can_animate(t) and ms > 0:
+                    return True
+            return False
+
+        t = str(transition_context.get('type') or 'none')
+        ms = int(transition_context.get('ms') or 0)
+        return can_animate(t) and ms > 0
+
+    def _render_split_zone_transition(self, renderer: FrameRenderer, plan: dict, old_item: dict, new_item: dict, elapsed_s: float, zones: dict) -> pygame.Surface:
+        layout = plan.get('layout') if isinstance(plan.get('layout'), dict) else {}
+        direction = str(layout.get('direction') or 'horizontal').lower()
+        ratio = max(1, min(99, int(layout.get('ratioA') or 50)))
+        orientation = str(layout.get('orientation') or 'landscape')
+        manifest_dir = self.config.manifest_path.parent
+        assets = plan.get('assets') if isinstance(plan.get('assets'), dict) else {}
+
+        old_zones = old_item.get('zones') if isinstance(old_item.get('zones'), dict) else {}
+        new_zones = new_item.get('zones') if isinstance(new_item.get('zones'), dict) else {}
+
+        if direction == 'vertical':
+            a_size = (renderer.screen_w, int(renderer.screen_h * (ratio / 100.0)))
+            b_size = (renderer.screen_w, renderer.screen_h - a_size[1])
+            a_pos = (0, 0)
+            b_pos = (0, a_size[1])
+        else:
+            a_size = (int(renderer.screen_w * (ratio / 100.0)), renderer.screen_h)
+            b_size = (renderer.screen_w - a_size[0], renderer.screen_h)
+            a_pos = (0, 0)
+            b_pos = (a_size[0], 0)
+
+        frame = pygame.Surface((renderer.screen_w, renderer.screen_h)).convert()
+        frame.fill((0, 0, 0))
+
+        zone_a = self._render_split_zone(renderer, manifest_dir, assets, old_zones.get('A'), new_zones.get('A'), zones.get('A'), a_size, elapsed_s)
+        zone_b = self._render_split_zone(renderer, manifest_dir, assets, old_zones.get('B'), new_zones.get('B'), zones.get('B'), b_size, elapsed_s)
+
+        if zone_a is not None:
+            frame.blit(zone_a, a_pos)
+        if zone_b is not None:
+            frame.blit(zone_b, b_pos)
+
+        return renderer.orient_frame(frame, orientation)
+
+    def _render_split_zone(self, renderer: FrameRenderer, manifest_dir: Path, assets: dict, old_zone_raw, new_zone_raw, zone_transition_raw, target_size: tuple[int, int], elapsed_s: float) -> pygame.Surface | None:
+        old_zone = old_zone_raw if isinstance(old_zone_raw, dict) else {}
+        new_zone = new_zone_raw if isinstance(new_zone_raw, dict) else {}
+        zone_transition = zone_transition_raw if isinstance(zone_transition_raw, dict) else {}
+
+        old_asset = str(old_zone.get('asset') or '')
+        new_asset = str(new_zone.get('asset') or '')
+        old_img = self._asset_surface(renderer, manifest_dir, old_asset, assets)
+        new_img = self._asset_surface(renderer, manifest_dir, new_asset, assets)
+
+        if old_img is None and new_img is None:
+            return None
+
+        old_fit = renderer.fit_image(old_img, target_size) if old_img is not None else None
+        new_fit = renderer.fit_image(new_img, target_size) if new_img is not None else old_fit
+        if new_fit is None:
+            return old_fit
+
+        t = normalize_transition_name(str(zone_transition.get('type') or 'none'))
+        ms = max(0, int(zone_transition.get('ms') or 0))
+        if old_fit is not None and can_animate(t) and ms > 0:
+            progress = min(1.0, max(0.0, elapsed_s / max(ms / 1000.0, 0.001)))
+            if progress < 1.0:
+                return render_transition(t, old_fit, new_fit, progress)
+
+        return new_fit

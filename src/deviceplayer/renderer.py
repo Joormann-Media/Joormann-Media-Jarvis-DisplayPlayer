@@ -57,6 +57,12 @@ class FrameRenderer:
         self._fit_cache[cache_key] = canvas
         return canvas
 
+    def fit_image(self, image: pygame.Surface, target_size: tuple[int, int]) -> pygame.Surface:
+        return self._fit(image, target_size)
+
+    def orient_frame(self, frame: pygame.Surface, orientation: str) -> pygame.Surface:
+        return self._orient(frame, orientation)
+
     def render_full(self, image: pygame.Surface, orientation: str) -> pygame.Surface:
         frame = self._fit(image, (self.screen_w, self.screen_h))
         return self._orient(frame, orientation)
