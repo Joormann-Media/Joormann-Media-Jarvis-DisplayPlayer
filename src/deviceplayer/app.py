@@ -156,7 +156,7 @@ class DevicePlayerApp:
                 duration_ms = int(item.get('durationMs') or plan['defaults']['durationMs'])
 
                 transition = self._resolve_transition(item, plan, duration_ms)
-                transition_context = self._build_transition_context(plan, current_item, item, transition)
+                transition_context = self._build_transition_context(plan, current_item, item, transition, duration_ms)
                 transition = self._effective_transition(transition, transition_context)
                 will_transition = current_frame is not None and self._has_active_transition(transition_context)
 
@@ -338,7 +338,7 @@ class DevicePlayerApp:
         ms = max(0, int(transition_context.get('ms') or fallback_transition.get('ms') or 0))
         return {'type': t, 'ms': ms}
 
-    def _build_transition_context(self, plan: dict, old_item: dict | None, new_item: dict | None, fallback_transition: dict) -> dict | None:
+    def _build_transition_context(self, plan: dict, old_item: dict | None, new_item: dict | None, fallback_transition: dict, duration_ms: int) -> dict | None:
         if not isinstance(old_item, dict) or not isinstance(new_item, dict):
             return None
 
@@ -365,8 +365,7 @@ class DevicePlayerApp:
             zone_new = new_zones.get(key) if isinstance(new_zones.get(key), dict) else {}
             transition = zone_new.get('transition') if isinstance(zone_new.get('transition'), dict) else {}
             t = normalize_transition_name(str(transition.get('type') or default_type))
-            ms = int(transition.get('ms') or default_ms)
-            ms = max(0, ms)
+            ms = clamp_transition_ms(duration_ms, int(transition.get('ms') or default_ms))
             zones_cfg[key] = {'type': t, 'ms': ms}
             has_active = has_active or (can_animate(t) and ms > 0)
 
