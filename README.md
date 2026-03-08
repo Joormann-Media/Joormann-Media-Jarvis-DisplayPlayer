@@ -9,7 +9,9 @@ Eigenständiger HDMI-Player für kompakte Runtime-Manifeste aus dem Adminpanel.
 - `layout.direction`: `horizontal` | `vertical` (bei split)
 - `layout.ratioA`: 1..99 (bei split)
 - `defaults.durationMs`
-- `defaults.transition.type`: `none` | `crossfade` | `slide-left`
+- `defaults.transition.type`:
+  - nativ: `none` | `crossfade` | `slide-left` | `slide-right` | `slide-up` | `slide-down`
+  - Aliasse: `fade`, `dissolve`, `cross-fade` -> `crossfade`
 - `defaults.transition.ms`
 - `assets` Mapping
 - `playlist`:

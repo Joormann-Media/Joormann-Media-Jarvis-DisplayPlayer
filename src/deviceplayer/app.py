@@ -12,7 +12,7 @@ from .logger import configure_logger
 from .plan_loader import ManifestError, load_manifest
 from .playlist import PlaylistCursor
 from .renderer import FrameRenderer
-from .transitions import crossfade, slide_left
+from .transitions import can_animate, normalize_transition_name, render_transition
 from .utils import clamp_transition_ms
 
 
@@ -151,9 +151,12 @@ class DevicePlayerApp:
                 next_switch_at = now + (duration_ms / 1000.0)
 
                 tr = item.get('transition') if isinstance(item.get('transition'), dict) else plan['defaults']['transition']
-                transition = {'type': str(tr.get('type') or 'none').lower(), 'ms': clamp_transition_ms(duration_ms, int(tr.get('ms') or 0))}
+                transition = {
+                    'type': normalize_transition_name(str(tr.get('type') or 'none')),
+                    'ms': clamp_transition_ms(duration_ms, int(tr.get('ms') or 0)),
+                }
 
-                if current_frame is not None and transition['type'] in {'crossfade', 'slide-left'} and transition['ms'] > 0:
+                if current_frame is not None and can_animate(str(transition['type'])) and transition['ms'] > 0:
                     transition_from = current_frame
                     transition_start = now
                     current_frame = new_frame
@@ -171,10 +174,8 @@ class DevicePlayerApp:
                     transition_from = None
                     frame_to_show = current_frame
                     frame_dirty = True
-                elif transition['type'] == 'crossfade':
-                    frame_to_show = crossfade(transition_from, current_frame, progress)
-                elif transition['type'] == 'slide-left':
-                    frame_to_show = slide_left(transition_from, current_frame, progress)
+                else:
+                    frame_to_show = render_transition(str(transition['type']), transition_from, current_frame, progress)
 
             if frame_to_show is not None and (frame_dirty or in_transition):
                 screen.blit(frame_to_show, (0, 0))
