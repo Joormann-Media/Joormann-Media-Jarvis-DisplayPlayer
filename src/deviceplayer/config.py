@@ -52,19 +52,21 @@ def _resolve_manifest_path(manifest_path: str | None = None) -> Path:
     if manifest_path:
         return Path(manifest_path).expanduser().resolve()
 
-    explicit = os.getenv('DEVICEPLAYER_MANIFEST_PATH', '').strip()
-    if explicit:
-        return Path(explicit).expanduser().resolve()
-
-    storage_root = os.getenv('DEVICEPLAYER_STORAGE_ROOT', '').strip()
-    if storage_root:
-        return (Path(storage_root).expanduser() / 'stream/current/manifest.json').resolve()
-
+    # SSOT: the DevicePortal storage config defines where stream/current lives.
     portal_storage_cfg = os.getenv('DEVICEPLAYER_PORTAL_STORAGE_CONFIG', '').strip()
     if portal_storage_cfg:
         resolved = _manifest_from_portal_storage_config(portal_storage_cfg)
         if resolved is not None:
             return resolved.expanduser().resolve()
+
+    storage_root = os.getenv('DEVICEPLAYER_STORAGE_ROOT', '').strip()
+    if storage_root:
+        return (Path(storage_root).expanduser() / 'stream/current/manifest.json').resolve()
+
+    # Legacy/manual override fallback only if SSOT config is not available.
+    explicit = os.getenv('DEVICEPLAYER_MANIFEST_PATH', '').strip()
+    if explicit:
+        return Path(explicit).expanduser().resolve()
 
     return Path('/mnt/deviceportal/media/stream/current/manifest.json').resolve()
 

@@ -35,8 +35,14 @@ sudo systemctl enable --now joormann-media-deviceplayer.service
 sudo systemctl status joormann-media-deviceplayer.service
 ```
 
-Standard-Manifestpfad im Service:
-- `/mnt/deviceportal/media/stream/current/manifest.json`
+Manifest-Auflösung (Reihenfolge):
+1. `DEVICEPLAYER_PORTAL_STORAGE_CONFIG` (Single Source of Truth)
+2. `DEVICEPLAYER_STORAGE_ROOT`
+3. `DEVICEPLAYER_MANIFEST_PATH` (Legacy-Fallback)
+4. Fallback: `/mnt/deviceportal/media/stream/current/manifest.json`
+
+Empfehlung: `DEVICEPLAYER_MANIFEST_PATH` und `DEVICEPLAYER_STORAGE_ROOT` leer lassen,
+nur `DEVICEPLAYER_PORTAL_STORAGE_CONFIG` setzen.
 
 Empfohlene Runtime-Parameter (für Signage-Dauerbetrieb):
 - `DEVICEPLAYER_TRANSITION_FPS=30`

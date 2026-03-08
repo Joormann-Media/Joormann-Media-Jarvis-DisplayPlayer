@@ -11,7 +11,9 @@ SupplementaryGroups=video render input audio
 WorkingDirectory=/home/djanebmb/projects/Joormann-Media-DevicePlayer
 Environment=PYTHONUNBUFFERED=1
 Environment=SDL_AUDIODRIVER=dummy
-Environment=DEVICEPLAYER_MANIFEST_PATH=/mnt/deviceportal/media/stream/current/manifest.json
+Environment=DEVICEPLAYER_MANIFEST_PATH=
+Environment=DEVICEPLAYER_STORAGE_ROOT=
+Environment=DEVICEPLAYER_PORTAL_STORAGE_CONFIG=%h/Joormann-Media-DevicePortal/var/data/config-storage.json
 Environment=DEVICEPLAYER_VIDEO_DRIVERS=kmsdrm,fbcon,wayland,x11
 Environment=DEVICEPLAYER_TRANSITION_FPS=30
 Environment=DEVICEPLAYER_IDLE_SLEEP_MS=200
