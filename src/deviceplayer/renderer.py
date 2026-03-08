@@ -9,6 +9,11 @@ class FrameRenderer:
     def __init__(self, screen_size: tuple[int, int]):
         self.screen_w, self.screen_h = screen_size
         self._cache: dict[str, pygame.Surface] = {}
+        self._fit_cache: dict[tuple[int, int, int], pygame.Surface] = {}
+
+    def clear_caches(self) -> None:
+        self._cache.clear()
+        self._fit_cache.clear()
 
     def resolve_asset_path(self, manifest_dir: Path, asset_ref: str) -> Path:
         raw = Path(str(asset_ref))
@@ -21,15 +26,26 @@ class FrameRenderer:
         cached = self._cache.get(key)
         if cached is not None:
             return cached
-        image = pygame.image.load(key).convert()
+        loaded = pygame.image.load(key)
+        if loaded.get_alpha() is not None:
+            image = loaded.convert_alpha()
+        else:
+            image = loaded.convert()
         self._cache[key] = image
         return image
 
     def _fit(self, image: pygame.Surface, target_size: tuple[int, int]) -> pygame.Surface:
         tw, th = target_size
+        cache_key = (id(image), tw, th)
+        cached = self._fit_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         iw, ih = image.get_size()
         if iw <= 0 or ih <= 0 or tw <= 0 or th <= 0:
-            return pygame.Surface((max(tw, 1), max(th, 1))).convert()
+            empty = pygame.Surface((max(tw, 1), max(th, 1))).convert()
+            self._fit_cache[cache_key] = empty
+            return empty
 
         scale = min(tw / iw, th / ih)
         nw = max(1, int(iw * scale))
@@ -38,6 +54,7 @@ class FrameRenderer:
         canvas = pygame.Surface((tw, th)).convert()
         canvas.fill((0, 0, 0))
         canvas.blit(scaled, ((tw - nw) // 2, (th - nh) // 2))
+        self._fit_cache[cache_key] = canvas
         return canvas
 
     def render_full(self, image: pygame.Surface, orientation: str) -> pygame.Surface:

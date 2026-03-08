@@ -5,6 +5,7 @@ Stand: 2026-03-08
 ## Ergebnis
 
 Der Player ist jetzt als lauffähiger MVP umgesetzt.
+Zusätzlich wurde der Render-Pfad für Dauerbetrieb auf Raspberry Pi gezielt auf niedrige Last optimiert.
 
 ## Abgedeckte Funktionen
 
@@ -17,6 +18,12 @@ Der Player ist jetzt als lauffähiger MVP umgesetzt.
 - robuste Fehlerbehandlung pro Asset (kein Komplettabsturz)
 - Manifest-Reload via Dateizeit-Änderung (Polling)
 - Service-Betrieb via `systemd/joormann-media-deviceplayer.service`
+- Lastoptimierung:
+  - Idle-Rendering ohne Dauer-Redraw
+  - getrennte Transition-FPS vs. statischer Idle-Wait
+  - Frame-Cache pro Playlist-Item (full/split)
+  - Renderer-Cache für geladene und gefittete Surfaces
+  - Cache-Invalidierung nur bei Manifest-Änderung
 
 ## Wichtige Dateien
 
@@ -32,6 +39,7 @@ Der Player ist jetzt als lauffähiger MVP umgesetzt.
 - Fokus aktuell auf Bild-Assets (keine Videodekodierung in diesem MVP)
 - effektive WebP-Unterstützung hängt von lokalem SDL_image/Pygame Build ab
 - keine externe Telemetrie-Schnittstelle im Player-Prozess
+- tatsächliche CPU-/Temperaturwerte hängen weiterhin von HDMI-Modus, GPU-Treiber (KMS) und Build der SDL/pygame-Binaries ab
 
 ## Fazit
 

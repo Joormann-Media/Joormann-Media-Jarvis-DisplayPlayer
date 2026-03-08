@@ -12,7 +12,8 @@ class PlayerConfig:
     fullscreen: bool
     window_width: int
     window_height: int
-    fps: int
+    transition_fps: int
+    idle_sleep_ms: int
     poll_reload_seconds: float
     log_level: str
 
@@ -73,7 +74,8 @@ def build_config(manifest_path: str | None = None) -> PlayerConfig:
     fullscreen = os.getenv('DEVICEPLAYER_FULLSCREEN', '1').strip().lower() in {'1', 'true', 'yes', 'on'}
     width = int(os.getenv('DEVICEPLAYER_WIDTH', '1920'))
     height = int(os.getenv('DEVICEPLAYER_HEIGHT', '1080'))
-    fps = max(20, min(120, int(os.getenv('DEVICEPLAYER_FPS', '60'))))
+    transition_fps = max(12, min(60, int(os.getenv('DEVICEPLAYER_TRANSITION_FPS', os.getenv('DEVICEPLAYER_FPS', '30')))))
+    idle_sleep_ms = max(20, min(2000, int(os.getenv('DEVICEPLAYER_IDLE_SLEEP_MS', '200'))))
     poll = float(os.getenv('DEVICEPLAYER_RELOAD_POLL_SECONDS', '1.0'))
     level = os.getenv('DEVICEPLAYER_LOG_LEVEL', 'INFO')
 
@@ -82,7 +84,8 @@ def build_config(manifest_path: str | None = None) -> PlayerConfig:
         fullscreen=fullscreen,
         window_width=width,
         window_height=height,
-        fps=fps,
+        transition_fps=transition_fps,
+        idle_sleep_ms=idle_sleep_ms,
         poll_reload_seconds=max(0.2, poll),
         log_level=level,
     )

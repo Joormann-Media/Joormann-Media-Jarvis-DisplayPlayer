@@ -7,14 +7,17 @@ Wants=network-online.target
 Type=simple
 User=djanebmb
 Group=djanebmb
+SupplementaryGroups=video render input audio
 WorkingDirectory=/home/djanebmb/projects/Joormann-Media-DevicePlayer
 Environment=PYTHONUNBUFFERED=1
-Environment=SDL_VIDEODRIVER=kmsdrm
 Environment=SDL_AUDIODRIVER=dummy
 Environment=DEVICEPLAYER_MANIFEST_PATH=/mnt/deviceportal/media/stream/current/manifest.json
+Environment=DEVICEPLAYER_VIDEO_DRIVERS=kmsdrm,fbcon,wayland,x11
+Environment=DEVICEPLAYER_TRANSITION_FPS=30
+Environment=DEVICEPLAYER_IDLE_SLEEP_MS=200
 ExecStart=/home/djanebmb/projects/Joormann-Media-DevicePlayer/.venv/bin/python /home/djanebmb/projects/Joormann-Media-DevicePlayer/run.py
 Restart=always
-RestartSec=2
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
