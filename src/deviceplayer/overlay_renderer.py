@@ -52,6 +52,22 @@ class OverlayRenderer:
         box.fill((color[0], color[1], color[2], alpha))
         target.blit(box, rect.topleft)
 
+    def _normalize_rotation(self, value: int) -> int:
+        try:
+            raw = int(value)
+        except Exception:
+            return 0
+        raw %= 360
+        if raw < 0:
+            raw += 360
+        if raw >= 315 or raw < 45:
+            return 0
+        if raw >= 45 and raw < 135:
+            return 90
+        if raw >= 135 and raw < 225:
+            return 180
+        return 270
+
     def _draw_flash(self, surface: pygame.Surface, flash) -> None:
         title = str(flash.title or "").strip()
         message = str(flash.message or "").strip()
@@ -85,16 +101,35 @@ class OverlayRenderer:
         else:
             y = (self.screen_h - box_h) // 2
 
-        rect = pygame.Rect(x, y, box_w, box_h)
-        self._set_alpha_fill(surface, rect, bg, flash.opacity)
-        pygame.draw.rect(surface, accent, rect, width=2, border_radius=10)
+        panel = pygame.Surface((max(1, box_w), max(1, box_h)), pygame.SRCALPHA)
+        self._set_alpha_fill(panel, pygame.Rect(0, 0, box_w, box_h), bg, flash.opacity)
+        pygame.draw.rect(panel, accent, pygame.Rect(0, 0, box_w, box_h), width=2, border_radius=10)
 
-        cursor_y = y + padding
+        cursor_y = padding
         if title_s is not None:
-            surface.blit(title_s, (x + padding, cursor_y))
+            panel.blit(title_s, (padding, cursor_y))
             cursor_y += title_s.get_height() + 6
         if msg_s is not None:
-            surface.blit(msg_s, (x + padding, cursor_y))
+            panel.blit(msg_s, (padding, cursor_y))
+
+        rotation = self._normalize_rotation(getattr(flash, "rotation", 0))
+        if rotation in (90, 270):
+            rotated = pygame.transform.rotate(panel, -rotation)
+            rw, rh = rotated.get_size()
+            y = (self.screen_h - rh) // 2
+            if flash.position == "top":
+                x = 24
+            elif flash.position == "bottom":
+                x = self.screen_w - rw - 24
+            else:
+                x = (self.screen_w - rw) // 2
+            surface.blit(rotated, (x, y))
+            return
+
+        if rotation == 180:
+            panel = pygame.transform.rotate(panel, -rotation)
+
+        surface.blit(panel, (x, y))
 
     def _draw_popup(self, surface: pygame.Surface, popup) -> None:
         title = str(popup.title or "").strip()
@@ -165,9 +200,8 @@ class OverlayRenderer:
         fg = self._hex_to_rgb(ticker.text_color, (255, 255, 255))
 
         height = max(24, min(self.screen_h, int(ticker.height)))
-        y = 0 if ticker.position == "top" else self.screen_h - height
-        rect = pygame.Rect(0, y, self.screen_w, height)
-        self._set_alpha_fill(surface, rect, bg, ticker.opacity)
+        strip = pygame.Surface((self.screen_w, height), pygame.SRCALPHA)
+        self._set_alpha_fill(strip, pygame.Rect(0, 0, self.screen_w, height), bg, ticker.opacity)
 
         text_surface = self._text(str(ticker.text), ticker.font_size, fg, bold=True)
         if text_surface.get_width() <= 0:
@@ -177,10 +211,29 @@ class OverlayRenderer:
         step = text_surface.get_width() + max(24, padding)
         offset = active.offset_px % float(step)
         x = -int(offset)
-        y_text = y + max(0, (height - text_surface.get_height()) // 2)
+        y_text = max(0, (height - text_surface.get_height()) // 2)
         while x < self.screen_w + step:
-            surface.blit(text_surface, (x + padding, y_text))
+            strip.blit(text_surface, (x + padding, y_text))
             x += step
+
+        rotation = self._normalize_rotation(getattr(ticker, "rotation", 0))
+        if rotation in (90, 270):
+            rendered = pygame.transform.rotate(strip, -rotation)
+            rw, rh = rendered.get_size()
+            y = (self.screen_h - rh) // 2
+            x = 0 if ticker.position == "top" else self.screen_w - rw
+            surface.blit(rendered, (x, y))
+            return
+
+        if rotation == 180:
+            strip = pygame.transform.rotate(strip, -rotation)
+            rw, rh = strip.get_size()
+            y = 0 if ticker.position == "top" else self.screen_h - rh
+            surface.blit(strip, (0, y))
+            return
+
+        y = 0 if ticker.position == "top" else self.screen_h - height
+        surface.blit(strip, (0, y))
 
     def compose(self, base_frame: pygame.Surface, overlay_frame: OverlayFrame) -> pygame.Surface:
         if overlay_frame.flash is None and overlay_frame.popup is None and not overlay_frame.tickers:

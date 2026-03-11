@@ -120,7 +120,7 @@ class DevicePlayerApp:
         )
 
         renderer = FrameRenderer(logical_size)
-        overlay_renderer = OverlayRenderer(logical_size)
+        overlay_renderer = OverlayRenderer(output_size)
         overlay_runtime = OverlayRuntime()
         plan: dict | None = None
         cursor: PlaylistCursor | None = None
@@ -220,10 +220,10 @@ class DevicePlayerApp:
                     overlay_needs_redraw = now >= overlay_next_redraw_at
                     overlay_next_redraw_at = now + overlay_runtime.next_due_seconds(now)
 
-                composed = overlay_renderer.compose(current_frame, overlay_frame)
+                rotated_base = self._apply_output_rotation(current_frame, output_rotation, output_size)
+                composed = overlay_renderer.compose(rotated_base, overlay_frame)
                 if frame_dirty or overlay_needs_redraw:
-                    output_frame = self._apply_output_rotation(composed, output_rotation, output_size)
-                    screen.blit(output_frame, (0, 0))
+                    screen.blit(composed, (0, 0))
                     pygame.display.flip()
                     frame_dirty = False
                 if has_ticker:
@@ -299,13 +299,13 @@ class DevicePlayerApp:
                 overlay_needs_redraw = now >= overlay_next_redraw_at
                 overlay_next_redraw_at = now + overlay_runtime.next_due_seconds(now)
 
-            composed_frame = frame_to_show
+            composed_frame = None
             if frame_to_show is not None:
-                composed_frame = overlay_renderer.compose(frame_to_show, overlay_frame)
+                rotated_base = self._apply_output_rotation(frame_to_show, output_rotation, output_size)
+                composed_frame = overlay_renderer.compose(rotated_base, overlay_frame)
 
             if composed_frame is not None and (frame_dirty or in_transition or overlay_needs_redraw):
-                output_frame = self._apply_output_rotation(composed_frame, output_rotation, output_size)
-                screen.blit(output_frame, (0, 0))
+                screen.blit(composed_frame, (0, 0))
                 pygame.display.flip()
                 if not in_transition:
                     frame_dirty = False
