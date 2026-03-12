@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import base64
+from io import BytesIO
 from pathlib import Path
+from urllib.request import Request, urlopen
 
 import pygame
 
@@ -67,6 +70,39 @@ class OverlayRenderer:
         if raw >= 135 and raw < 225:
             return 180
         return 270
+
+    def _load_popup_image(self, image_ref: str) -> pygame.Surface | None:
+        key = str(image_ref or "").strip()
+        if key == "":
+            return None
+        cached = self._image_cache.get(key)
+        if cached is not None:
+            return cached
+
+        loaded = None
+        try:
+            if key.lower().startswith("data:image/") and "," in key:
+                encoded = key.split(",", 1)[1]
+                raw = base64.b64decode(encoded, validate=False)
+                loaded = pygame.image.load(BytesIO(raw), "popup-inline")
+            elif key.lower().startswith("http://") or key.lower().startswith("https://"):
+                req = Request(key, headers={"User-Agent": "DevicePlayer/overlay"})
+                with urlopen(req, timeout=5) as response:
+                    raw = response.read()
+                loaded = pygame.image.load(BytesIO(raw), "popup-remote")
+            else:
+                img_path = Path(key).expanduser()
+                if img_path.exists():
+                    loaded = pygame.image.load(str(img_path))
+        except Exception:
+            loaded = None
+
+        if loaded is None:
+            return None
+
+        surface = loaded.convert_alpha() if loaded.get_alpha() is not None else loaded.convert()
+        self._image_cache[key] = surface
+        return surface
 
     def _draw_flash(self, surface: pygame.Surface, flash) -> None:
         title = str(flash.title or "").strip()
@@ -172,17 +208,7 @@ class OverlayRenderer:
 
         img_ref = str(popup.image_path or "").strip()
         if img_ref:
-            key = img_ref
-            cached = self._image_cache.get(key)
-            if cached is None:
-                try:
-                    img_path = Path(img_ref).expanduser()
-                    if img_path.exists():
-                        loaded = pygame.image.load(str(img_path))
-                        cached = loaded.convert_alpha() if loaded.get_alpha() is not None else loaded.convert()
-                        self._image_cache[key] = cached
-                except Exception:
-                    cached = None
+            cached = self._load_popup_image(img_ref)
             if cached is not None:
                 max_img_w = max(40, box_w // 3)
                 max_img_h = max(40, box_h // 2)

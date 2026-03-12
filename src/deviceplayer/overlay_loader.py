@@ -104,6 +104,10 @@ def _parse_popup(row: dict, idx: int) -> PopupMessage | None:
     title = _to_str(row.get("title"), "")
     message = _to_str(row.get("message"), "")
     image = _to_str(row.get("imagePath"), "")
+    if not image:
+        image = _to_str(row.get("imageUrl"), "")
+    if not image:
+        image = _to_str(row.get("imageData"), "")
     if not title and not message and not image:
         return None
     return PopupMessage(
