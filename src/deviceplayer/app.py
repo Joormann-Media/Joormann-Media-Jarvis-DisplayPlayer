@@ -7,11 +7,14 @@ from pathlib import Path
 
 import pygame
 
+from .audio_manager import AudioManager
 from .config import PlayerConfig
+from .control_api import PlayerControlApi
 from .logger import configure_logger
 from .overlay_loader import OverlayError, load_overlay_state
 from .overlay_renderer import OverlayRenderer
 from .overlay_runtime import OverlayRuntime
+from .player_status import PlayerRuntimeStatus
 from .plan_loader import ManifestError, load_manifest
 from .playlist import PlaylistCursor
 from .renderer import FrameRenderer
@@ -124,6 +127,21 @@ class DevicePlayerApp:
         renderer = FrameRenderer(logical_size)
         overlay_renderer = OverlayRenderer(output_size)
         overlay_runtime = OverlayRuntime()
+        runtime_status = PlayerRuntimeStatus()
+        audio_manager = AudioManager(
+            default_volume=self.config.audio_default_volume,
+            default_output=self.config.audio_default_output,
+            audio_root=self.config.audio_allowed_root,
+            logger=self.log,
+        )
+        control_api = PlayerControlApi(
+            bind_host=self.config.control_api_host,
+            bind_port=self.config.control_api_port,
+            audio=audio_manager,
+            runtime_status=runtime_status,
+            logger=self.log,
+        )
+        control_api.start()
         plan: dict | None = None
         cursor: PlaylistCursor | None = None
 
@@ -137,83 +155,163 @@ class DevicePlayerApp:
         overlay_next_redraw_at = 0.0
         frame_dirty = True
 
-        while self.running:
-            now = time.monotonic()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
+        try:
+            while self.running:
+                runtime_status.mark_render_tick()
+                now = time.monotonic()
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.running = False
 
-            if now >= self._last_overlay_reload_at + self.config.overlay_poll_seconds:
-                self._last_overlay_reload_at = now
-                should_reload_overlay = False
-                try:
-                    stat = self.config.overlay_state_path.stat()
-                    if stat.st_mtime > self._last_overlay_mtime:
-                        should_reload_overlay = True
-                except FileNotFoundError:
-                    if self._last_overlay_mtime != 0.0:
-                        self._last_overlay_mtime = 0.0
-                        overlay_runtime.set_state(load_overlay_state(self.config.overlay_state_path), now)
-                        frame_dirty = True
-
-                if should_reload_overlay:
+                if now >= self._last_overlay_reload_at + self.config.overlay_poll_seconds:
+                    self._last_overlay_reload_at = now
+                    should_reload_overlay = False
                     try:
-                        state = load_overlay_state(self.config.overlay_state_path)
-                        overlay_runtime.set_state(state, now)
-                        self._last_overlay_mtime = self.config.overlay_state_path.stat().st_mtime
-                        frame_dirty = True
-                        self.log.info(
-                            "loaded overlay state %s flashes=%s tickers=%s popups=%s",
-                            self.config.overlay_state_path,
-                            len(state.flash_messages),
-                            len(state.tickers),
-                            len(state.popups),
-                        )
-                    except OverlayError as exc:
-                        self.log.warning("overlay reload failed: %s", exc)
+                        stat = self.config.overlay_state_path.stat()
+                        if stat.st_mtime > self._last_overlay_mtime:
+                            should_reload_overlay = True
+                    except FileNotFoundError:
+                        if self._last_overlay_mtime != 0.0:
+                            self._last_overlay_mtime = 0.0
+                            overlay_runtime.set_state(load_overlay_state(self.config.overlay_state_path), now)
+                            frame_dirty = True
 
-            # Avoid stutter: defer manifest polling/reload while a transition is actively rendering.
-            if transition_from is None and now >= self._last_reload_at + self.config.poll_reload_seconds:
-                self._last_reload_at = now
-                should_reload = plan is None
-                try:
-                    stat = self.config.manifest_path.stat()
-                    if stat.st_mtime > self._last_manifest_mtime:
+                    if should_reload_overlay:
+                        try:
+                            state = load_overlay_state(self.config.overlay_state_path)
+                            overlay_runtime.set_state(state, now)
+                            self._last_overlay_mtime = self.config.overlay_state_path.stat().st_mtime
+                            frame_dirty = True
+                            self.log.info(
+                                "loaded overlay state %s flashes=%s tickers=%s popups=%s",
+                                self.config.overlay_state_path,
+                                len(state.flash_messages),
+                                len(state.tickers),
+                                len(state.popups),
+                            )
+                        except OverlayError as exc:
+                            self.log.warning("overlay reload failed: %s", exc)
+
+                # Avoid stutter: defer manifest polling/reload while a transition is actively rendering.
+                if transition_from is None and now >= self._last_reload_at + self.config.poll_reload_seconds:
+                    self._last_reload_at = now
+                    should_reload = plan is None
+                    try:
+                        stat = self.config.manifest_path.stat()
+                        if stat.st_mtime > self._last_manifest_mtime:
+                            should_reload = True
+                    except FileNotFoundError:
                         should_reload = True
-                except FileNotFoundError:
-                    should_reload = True
 
-                if should_reload:
-                    try:
-                        if plan is not None:
-                            self.log.info('manifest changed -> reload')
-                        loaded_plan = self._load_plan_or_raise(self.config.manifest_path)
-                        if plan is not None and self._is_same_plan(plan, loaded_plan):
+                    if should_reload:
+                        try:
+                            if plan is not None:
+                                self.log.info('manifest changed -> reload')
+                            loaded_plan = self._load_plan_or_raise(self.config.manifest_path)
+                            if plan is not None and self._is_same_plan(plan, loaded_plan):
+                                plan = loaded_plan
+                                continue
+
                             plan = loaded_plan
-                            continue
+                            renderer.clear_caches()
+                            self._frame_cache.clear()
+                            self._black_frame = None
+                            overlay_renderer.clear_caches()
+                            cursor = PlaylistCursor(plan['playlist'])
+                            current_frame = None
+                            current_item = None
+                            next_switch_at = 0.0
+                            transition_from = None
+                            transition_context = None
+                            frame_dirty = True
+                        except ManifestError as exc:
+                            if plan is not None:
+                                self.log.error('manifest reload failed: %s', exc)
+                            plan = None
+                            cursor = None
 
-                        plan = loaded_plan
-                        renderer.clear_caches()
-                        self._frame_cache.clear()
-                        self._black_frame = None
-                        overlay_renderer.clear_caches()
-                        cursor = PlaylistCursor(plan['playlist'])
-                        current_frame = None
-                        current_item = None
-                        next_switch_at = 0.0
+                if plan is None or cursor is None:
+                    if current_frame is None:
+                        current_frame = self._get_black_frame(renderer)
+                        frame_dirty = True
+                    overlay_frame = overlay_runtime.snapshot(now)
+                    has_ticker = overlay_runtime.has_ticker()
+                    if has_ticker:
+                        overlay_needs_redraw = True
+                    else:
+                        overlay_needs_redraw = now >= overlay_next_redraw_at
+                        overlay_next_redraw_at = now + overlay_runtime.next_due_seconds(now)
+
+                    composed = overlay_renderer.compose(current_frame, overlay_frame)
+                    if frame_dirty or overlay_needs_redraw:
+                        screen.blit(composed, (0, 0))
+                        pygame.display.flip()
+                        frame_dirty = False
+                    if has_ticker:
+                        clock.tick(self.config.overlay_fps)
+                    else:
+                        self._idle_wait(now, next_switch_at, in_transition=False, next_overlay_at=overlay_next_redraw_at)
+                    continue
+
+                # Never advance playlist while a transition is active.
+                if transition_from is None and (current_frame is None or now >= next_switch_at):
+                    try:
+                        item = cursor.next()
+                    except Exception as exc:
+                        self.log.error('playlist error: %s', exc)
+                        time.sleep(1.0)
+                        continue
+
+                    new_frame = self._render_item(renderer, plan, item)
+                    duration_ms = int(item.get('durationMs') or plan['defaults']['durationMs'])
+
+                    transition = self._resolve_transition(item, plan, duration_ms)
+                    transition_context = self._build_transition_context(plan, current_item, item, transition, duration_ms)
+                    transition = self._effective_transition(transition, transition_context)
+                    will_transition = current_frame is not None and self._has_active_transition(transition_context)
+
+                    # durationMs is pure stand/hold time.
+                    # Timer starts after transition has fully completed.
+                    hold_ms = max(100, duration_ms)
+                    transition_ms = int(transition.get('ms') or 0) if will_transition else 0
+                    next_switch_at = now + ((transition_ms + hold_ms) / 1000.0)
+
+                    if will_transition:
+                        transition_from = current_frame
+                        transition_start = now
+                        current_frame = new_frame
+                    else:
                         transition_from = None
                         transition_context = None
-                        frame_dirty = True
-                    except ManifestError as exc:
-                        if plan is not None:
-                            self.log.error('manifest reload failed: %s', exc)
-                        plan = None
-                        cursor = None
-
-            if plan is None or cursor is None:
-                if current_frame is None:
-                    current_frame = self._get_black_frame(renderer)
+                        current_frame = new_frame
+                    current_item = item
                     frame_dirty = True
+
+                frame_to_show = current_frame
+                in_transition = False
+                if transition_from is not None:
+                    in_transition = True
+                    progress = (now - transition_start) / max(transition['ms'] / 1000.0, 0.001)
+                    if progress >= 1.0:
+                        transition_from = None
+                        frame_to_show = current_frame
+                        frame_dirty = True
+                    else:
+                        if (
+                            transition_context is not None
+                            and bool(transition_context.get('split_per_zone'))
+                        ):
+                            frame_to_show = self._render_split_zone_transition(
+                                renderer=renderer,
+                                plan=plan,
+                                old_item=transition_context.get('old_item') if isinstance(transition_context.get('old_item'), dict) else {},
+                                new_item=transition_context.get('new_item') if isinstance(transition_context.get('new_item'), dict) else {},
+                                elapsed_s=max(0.0, now - transition_start),
+                                zones=transition_context.get('zones') if isinstance(transition_context.get('zones'), dict) else {},
+                            )
+                        else:
+                            frame_to_show = render_transition(str(transition['type']), transition_from, current_frame, progress)
+
                 overlay_frame = overlay_runtime.snapshot(now)
                 has_ticker = overlay_runtime.has_ticker()
                 if has_ticker:
@@ -222,102 +320,30 @@ class DevicePlayerApp:
                     overlay_needs_redraw = now >= overlay_next_redraw_at
                     overlay_next_redraw_at = now + overlay_runtime.next_due_seconds(now)
 
-                composed = overlay_renderer.compose(current_frame, overlay_frame)
-                if frame_dirty or overlay_needs_redraw:
-                    screen.blit(composed, (0, 0))
+                composed_frame = None
+                if frame_to_show is not None:
+                    composed_frame = overlay_renderer.compose(frame_to_show, overlay_frame)
+
+                if composed_frame is not None and (frame_dirty or in_transition or overlay_needs_redraw):
+                    screen.blit(composed_frame, (0, 0))
                     pygame.display.flip()
-                    frame_dirty = False
-                if has_ticker:
+                    if not in_transition:
+                        frame_dirty = False
+
+                if in_transition:
+                    clock.tick(self.config.transition_fps)
+                elif has_ticker:
                     clock.tick(self.config.overlay_fps)
                 else:
                     self._idle_wait(now, next_switch_at, in_transition=False, next_overlay_at=overlay_next_redraw_at)
-                continue
+        except Exception as exc:
+            runtime_status.mark_render_error(str(exc))
+            raise
+        finally:
+            control_api.stop()
+            audio_manager.shutdown()
+            pygame.quit()
 
-            # Never advance playlist while a transition is active.
-            if transition_from is None and (current_frame is None or now >= next_switch_at):
-                try:
-                    item = cursor.next()
-                except Exception as exc:
-                    self.log.error('playlist error: %s', exc)
-                    time.sleep(1.0)
-                    continue
-
-                new_frame = self._render_item(renderer, plan, item)
-                duration_ms = int(item.get('durationMs') or plan['defaults']['durationMs'])
-
-                transition = self._resolve_transition(item, plan, duration_ms)
-                transition_context = self._build_transition_context(plan, current_item, item, transition, duration_ms)
-                transition = self._effective_transition(transition, transition_context)
-                will_transition = current_frame is not None and self._has_active_transition(transition_context)
-
-                # durationMs is pure stand/hold time.
-                # Timer starts after transition has fully completed.
-                hold_ms = max(100, duration_ms)
-                transition_ms = int(transition.get('ms') or 0) if will_transition else 0
-                next_switch_at = now + ((transition_ms + hold_ms) / 1000.0)
-
-                if will_transition:
-                    transition_from = current_frame
-                    transition_start = now
-                    current_frame = new_frame
-                else:
-                    transition_from = None
-                    transition_context = None
-                    current_frame = new_frame
-                current_item = item
-                frame_dirty = True
-
-            frame_to_show = current_frame
-            in_transition = False
-            if transition_from is not None:
-                in_transition = True
-                progress = (now - transition_start) / max(transition['ms'] / 1000.0, 0.001)
-                if progress >= 1.0:
-                    transition_from = None
-                    frame_to_show = current_frame
-                    frame_dirty = True
-                else:
-                    if (
-                        transition_context is not None
-                        and bool(transition_context.get('split_per_zone'))
-                    ):
-                        frame_to_show = self._render_split_zone_transition(
-                            renderer=renderer,
-                            plan=plan,
-                            old_item=transition_context.get('old_item') if isinstance(transition_context.get('old_item'), dict) else {},
-                            new_item=transition_context.get('new_item') if isinstance(transition_context.get('new_item'), dict) else {},
-                            elapsed_s=max(0.0, now - transition_start),
-                            zones=transition_context.get('zones') if isinstance(transition_context.get('zones'), dict) else {},
-                        )
-                    else:
-                        frame_to_show = render_transition(str(transition['type']), transition_from, current_frame, progress)
-
-            overlay_frame = overlay_runtime.snapshot(now)
-            has_ticker = overlay_runtime.has_ticker()
-            if has_ticker:
-                overlay_needs_redraw = True
-            else:
-                overlay_needs_redraw = now >= overlay_next_redraw_at
-                overlay_next_redraw_at = now + overlay_runtime.next_due_seconds(now)
-
-            composed_frame = None
-            if frame_to_show is not None:
-                composed_frame = overlay_renderer.compose(frame_to_show, overlay_frame)
-
-            if composed_frame is not None and (frame_dirty or in_transition or overlay_needs_redraw):
-                screen.blit(composed_frame, (0, 0))
-                pygame.display.flip()
-                if not in_transition:
-                    frame_dirty = False
-
-            if in_transition:
-                clock.tick(self.config.transition_fps)
-            elif has_ticker:
-                clock.tick(self.config.overlay_fps)
-            else:
-                self._idle_wait(now, next_switch_at, in_transition=False, next_overlay_at=overlay_next_redraw_at)
-
-        pygame.quit()
         return 0
 
     def _load_plan_or_raise(self, manifest_path: Path) -> dict:

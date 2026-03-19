@@ -20,6 +20,11 @@ class PlayerConfig:
     overlay_poll_seconds: float
     log_level: str
     display_rotation_degrees: int
+    control_api_host: str
+    control_api_port: int
+    audio_default_output: str
+    audio_default_volume: int
+    audio_allowed_root: Path
 
 
 def _manifest_from_portal_storage_config(config_path_raw: str) -> Path | None:
@@ -154,6 +159,24 @@ def build_config(manifest_path: str | None = None) -> PlayerConfig:
             if derived is not None:
                 rotation_degrees = derived
 
+    control_api_host = os.getenv("DEVICEPLAYER_CONTROL_API_HOST", "127.0.0.1").strip() or "127.0.0.1"
+    try:
+        control_api_port = int(os.getenv("DEVICEPLAYER_CONTROL_API_PORT", "5081"))
+    except Exception:
+        control_api_port = 5081
+    control_api_port = max(1, min(65535, control_api_port))
+
+    audio_default_output = os.getenv("DEVICEPLAYER_AUDIO_DEFAULT_OUTPUT", "local").strip().lower()
+    if audio_default_output not in ("local", "bluetooth"):
+        audio_default_output = "local"
+    try:
+        audio_default_volume = int(os.getenv("DEVICEPLAYER_AUDIO_DEFAULT_VOLUME", "65"))
+    except Exception:
+        audio_default_volume = 65
+    audio_default_volume = max(0, min(100, audio_default_volume))
+    audio_root_raw = os.getenv("DEVICEPLAYER_AUDIO_ALLOWED_ROOT", str(path.parent / "audio")).strip()
+    audio_allowed_root = Path(audio_root_raw).expanduser().resolve()
+
     return PlayerConfig(
         manifest_path=path,
         overlay_state_path=overlay_path,
@@ -167,4 +190,9 @@ def build_config(manifest_path: str | None = None) -> PlayerConfig:
         overlay_poll_seconds=max(0.2, overlay_poll),
         log_level=level,
         display_rotation_degrees=rotation_degrees,
+        control_api_host=control_api_host,
+        control_api_port=control_api_port,
+        audio_default_output=audio_default_output,
+        audio_default_volume=audio_default_volume,
+        audio_allowed_root=audio_allowed_root,
     )
