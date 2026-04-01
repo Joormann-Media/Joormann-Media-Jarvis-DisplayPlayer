@@ -29,7 +29,11 @@ class PlayerConfig:
 
 def _manifest_from_portal_storage_config(config_path_raw: str) -> Path | None:
     config_path = Path(config_path_raw).expanduser()
-    if not config_path.exists():
+    try:
+        exists = config_path.exists()
+    except Exception:
+        return None
+    if not exists:
         return None
     try:
         payload = json.loads(config_path.read_text(encoding='utf-8'))
@@ -59,7 +63,11 @@ def _manifest_from_portal_storage_config(config_path_raw: str) -> Path | None:
 
 def _manifest_from_player_source(config_path_raw: str) -> Path | None:
     config_path = Path(config_path_raw).expanduser()
-    if not config_path.exists():
+    try:
+        exists = config_path.exists()
+    except Exception:
+        return None
+    if not exists:
         return None
     try:
         payload = json.loads(config_path.read_text(encoding='utf-8'))
@@ -77,7 +85,11 @@ def _manifest_from_player_source(config_path_raw: str) -> Path | None:
 
 def _rotation_from_player_source(config_path_raw: str) -> int | None:
     config_path = Path(config_path_raw).expanduser()
-    if not config_path.exists():
+    try:
+        exists = config_path.exists()
+    except Exception:
+        return None
+    if not exists:
         return None
     try:
         payload = json.loads(config_path.read_text(encoding="utf-8"))
@@ -99,20 +111,46 @@ def _rotation_from_player_source(config_path_raw: str) -> int | None:
         return None
 
 
+def _portal_data_candidates(filename: str) -> list[str]:
+    candidates: list[Path] = []
+    env_path = os.getenv('DEVICEPLAYER_PORTAL_PLAYER_SOURCE' if filename == 'player-source.json' else 'DEVICEPLAYER_PORTAL_STORAGE_CONFIG', '').strip()
+    if env_path:
+        candidates.append(Path(env_path).expanduser())
+
+    home = Path.home()
+    candidates.extend(
+        [
+            home / 'projects' / 'Joormann-Media-Deviceportal' / 'var' / 'data' / filename,
+            home / 'projects' / 'Joormann-Media-DevicePortal' / 'var' / 'data' / filename,
+            home / 'projects' / 'Joormann-Media-JarvisPortal-Rsp' / 'var' / 'data' / filename,
+            Path('/home/djanebmb/projects/Joormann-Media-Deviceportal/var/data') / filename,
+            Path('/home/djanebmb/projects/Joormann-Media-JarvisPortal-Rsp/var/data') / filename,
+        ]
+    )
+
+    uniq: list[str] = []
+    seen: set[str] = set()
+    for item in candidates:
+        key = str(item)
+        if key in seen:
+            continue
+        seen.add(key)
+        uniq.append(key)
+    return uniq
+
+
 def _resolve_manifest_path(manifest_path: str | None = None) -> Path:
     if manifest_path:
         return Path(manifest_path).expanduser().resolve()
 
     # SSOT handover file from DevicePortal.
-    portal_source = os.getenv('DEVICEPLAYER_PORTAL_PLAYER_SOURCE', '').strip()
-    if portal_source:
+    for portal_source in _portal_data_candidates('player-source.json'):
         resolved = _manifest_from_player_source(portal_source)
         if resolved is not None:
             return resolved.expanduser().resolve()
 
     # SSOT: the DevicePortal storage config defines where stream/current lives.
-    portal_storage_cfg = os.getenv('DEVICEPLAYER_PORTAL_STORAGE_CONFIG', '').strip()
-    if portal_storage_cfg:
+    for portal_storage_cfg in _portal_data_candidates('config-storage.json'):
         resolved = _manifest_from_portal_storage_config(portal_storage_cfg)
         if resolved is not None:
             return resolved.expanduser().resolve()
@@ -153,11 +191,11 @@ def build_config(manifest_path: str | None = None) -> PlayerConfig:
         except Exception:
             rotation_degrees = 0
     else:
-        portal_source = os.getenv('DEVICEPLAYER_PORTAL_PLAYER_SOURCE', '').strip()
-        if portal_source:
+        for portal_source in _portal_data_candidates('player-source.json'):
             derived = _rotation_from_player_source(portal_source)
             if derived is not None:
                 rotation_degrees = derived
+                break
 
     control_api_host = os.getenv("DEVICEPLAYER_CONTROL_API_HOST", "127.0.0.1").strip() or "127.0.0.1"
     try:
