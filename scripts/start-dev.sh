@@ -46,6 +46,7 @@ pid="$(cat "$PID_FILE")"
 if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
   echo "Gestartet: jarvis-displayplayer (PID $pid)"
   echo "Log: $LOG_FILE"
+  "$SCRIPT_DIR/autodiscover.sh" || true
 else
   rm -f "$PID_FILE"
   echo "Fehlgeschlagen. Siehe Log: $LOG_FILE"
