@@ -27,8 +27,13 @@ fi
 
 repo_name="$(basename "$PROJECT_ROOT")"
 repo_link=""
+repo_branch="${AUTODISCOVER_REPO_BRANCH:-main}"
 if command -v git >/dev/null 2>&1; then
   repo_link="$(git -C "$PROJECT_ROOT" remote get-url origin 2>/dev/null || true)"
+  branch_guess="$(git -C "$PROJECT_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+  if [[ -n "$branch_guess" && "$branch_guess" != "HEAD" ]]; then
+    repo_branch="$branch_guess"
+  fi
 fi
 if [[ "$repo_link" =~ ^git@github.com:(.+)$ ]]; then
   repo_link="https://github.com/${BASH_REMATCH[1]}"
@@ -42,6 +47,8 @@ fi
 service_name="${AUTODISCOVER_SERVICE_NAME:-${JARVIS_SERVICE_NAME:-}}"
 service_user="${AUTODISCOVER_SERVICE_USER:-${USER:-}}"
 install_dir="${AUTODISCOVER_INSTALL_DIR:-$PROJECT_ROOT}"
+use_service="${AUTODISCOVER_USE_SERVICE:-true}"
+autostart="${AUTODISCOVER_AUTOSTART:-true}"
 
 service_port="${AUTODISCOVER_PORT:-${FLASK_PORT:-${CORE_API_PORT:-${SERVICE_PORT:-${PORT:-}}}}}"
 lan_ip="$(hostname -I 2>/dev/null | awk '{print $1}')"
@@ -61,14 +68,22 @@ instance_id="${AUTODISCOVER_INSTANCE_ID:-${node_name}-${repo_name}}"
 
 payload="$(python3 - <<PY
 import json
+
+def to_bool(v):
+    return str(v).strip().lower() in {"1", "true", "yes", "on"}
+
+raw_port = ${service_port@Q}
+port = int(raw_port) if str(raw_port).isdigit() else None
 print(json.dumps({
   "repo_name": ${repo_name@Q},
   "repo_link": ${repo_link@Q},
-  "repo_branch": "main",
+  "repo_branch": ${repo_branch@Q},
   "install_dir": ${install_dir@Q},
   "service_name": ${service_name@Q},
   "service_user": ${service_user@Q},
-  "service_port": int(${service_port@Q}) if str(${service_port@Q}).isdigit() else None,
+  "use_service": to_bool(${use_service@Q}),
+  "autostart": to_bool(${autostart@Q}),
+  "service_port": port,
   "api_base_url": ${api_base_url@Q},
   "health_url": ${health_url@Q},
   "hostname": ${node_name@Q},
