@@ -1,0 +1,17 @@
+[Unit]
+Description=Joormann Media Service (Joormann-Media-Jarvis-DisplayPlayer)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=__SERVICE_USER__
+Group=__SERVICE_USER__
+WorkingDirectory=/home/djanebmb/projects/Joormann-Media-Jarvis-DisplayPlayer
+ExecStart=/home/djanebmb/projects/Joormann-Media-Jarvis-DisplayPlayer/scripts/start-dev.sh
+ExecStop=/home/djanebmb/projects/Joormann-Media-Jarvis-DisplayPlayer/scripts/stop-dev.sh
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
