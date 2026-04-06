@@ -38,13 +38,14 @@ fi
 if [[ "$repo_link" =~ ^git@github.com:(.+)$ ]]; then
   repo_link="https://github.com/${BASH_REMATCH[1]}"
 fi
-if [[ "$repo_link" =~ \.git$ ]]; then
-  :
-elif [[ -n "$repo_link" ]]; then
+if [[ -n "$repo_link" && ! "$repo_link" =~ \.git$ ]]; then
   repo_link="${repo_link}.git"
 fi
 
 service_name="${AUTODISCOVER_SERVICE_NAME:-${JARVIS_SERVICE_NAME:-}}"
+if [[ -z "$service_name" ]]; then
+  service_name="$(printf '%s' "$repo_name" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g; s/-\+/-/g; s/^-//; s/-$//').service"
+fi
 service_user="${AUTODISCOVER_SERVICE_USER:-${USER:-}}"
 install_dir="${AUTODISCOVER_INSTALL_DIR:-$PROJECT_ROOT}"
 use_service="${AUTODISCOVER_USE_SERVICE:-true}"
@@ -62,6 +63,12 @@ health_url="${AUTODISCOVER_HEALTH_URL:-}"
 if [[ -z "$health_url" && -n "$api_base_url" ]]; then
   health_url="${api_base_url}/health"
 fi
+ui_path="${AUTODISCOVER_UI_PATH:-/}"
+[[ "$ui_path" == /* ]] || ui_path="/$ui_path"
+ui_url="${AUTODISCOVER_UI_URL:-}"
+if [[ -z "$ui_url" && -n "$api_base_url" ]]; then
+  ui_url="${api_base_url}${ui_path}"
+fi
 
 node_name="${AUTODISCOVER_NODE_NAME:-$(hostname 2>/dev/null || true)}"
 instance_id="${AUTODISCOVER_INSTANCE_ID:-${node_name}-${repo_name}}"
@@ -72,10 +79,55 @@ import json
 def to_bool(v):
     return str(v).strip().lower() in {"1", "true", "yes", "on"}
 
+def tags_for(name):
+    base = ["jarvis", "autodiscover"]
+    n = (name or "").lower()
+    if "ocr" in n:
+        base.append("ocr")
+    elif "smarthome" in n:
+        base.append("smarthome")
+    elif "audio" in n:
+        base.append("audio")
+    elif "tts" in n:
+        base.append("tts")
+    elif "whisper" in n:
+        base.append("stt")
+    elif "hotword" in n:
+        base.append("hotword")
+    elif "chat" in n:
+        base.append("chat")
+    elif "display" in n:
+        base.append("display")
+    return base
+
+def caps_for(name):
+    n = (name or "").lower()
+    if "ocr" in n:
+        return ["ocr.upload", "ocr.pdf", "ocr.image"]
+    if "smarthome" in n:
+        return ["lights.onoff", "lights.brightness", "lights.color"]
+    if "tts" in n:
+        return ["tts.synthesize", "tts.voices"]
+    if "whisper" in n:
+        return ["stt.transcribe", "stt.mic"]
+    if "hotword" in n:
+        return ["hotword.detect"]
+    if "chat" in n:
+        return ["chat.generate"]
+    if "display" in n:
+        return ["display.playback"]
+    if "audio" in n:
+        return ["audio.play", "audio.stream", "audio.spotify"]
+    return []
+
 raw_port = ${service_port@Q}
 port = int(raw_port) if str(raw_port).isdigit() else None
+repo_name = ${repo_name@Q}
+api_base_url = ${api_base_url@Q}
+health_url = ${health_url@Q}
+ui_url = ${ui_url@Q}
 print(json.dumps({
-  "repo_name": ${repo_name@Q},
+  "repo_name": repo_name,
   "repo_link": ${repo_link@Q},
   "repo_branch": ${repo_branch@Q},
   "install_dir": ${install_dir@Q},
@@ -84,12 +136,19 @@ print(json.dumps({
   "use_service": to_bool(${use_service@Q}),
   "autostart": to_bool(${autostart@Q}),
   "service_port": port,
-  "api_base_url": ${api_base_url@Q},
-  "health_url": ${health_url@Q},
+  "api_base_url": api_base_url,
+  "health_url": health_url,
+  "ui_url": ui_url,
+  "endpoints": {
+    "api_base": api_base_url,
+    "health": health_url,
+    "ui": ui_url,
+  },
   "hostname": ${node_name@Q},
   "node_name": ${node_name@Q},
   "instance_id": ${instance_id@Q},
-  "tags": ["jarvis", "autodiscover"],
+  "tags": tags_for(repo_name),
+  "capabilities": caps_for(repo_name),
 }))
 PY
 )"
