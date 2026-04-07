@@ -46,6 +46,15 @@ service_name="${AUTODISCOVER_SERVICE_NAME:-${JARVIS_SERVICE_NAME:-}}"
 if [[ -z "$service_name" ]]; then
   service_name="$(printf '%s' "$repo_name" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g; s/-\+/-/g; s/^-//; s/-$//').service"
 fi
+service_id="${AUTODISCOVER_SERVICE_ID:-${JARVIS_SERVICE_ID:-}}"
+if [[ -z "$service_id" ]]; then
+  seed="${repo_link:-$repo_name}|$service_name"
+  if command -v sha1sum >/dev/null 2>&1; then
+    service_id="jsvc_$(printf '%s' "$seed" | sha1sum | awk '{print $1}' | cut -c1-12)"
+  else
+    service_id="jsvc_$(printf '%s' "$seed" | md5sum | awk '{print $1}' | cut -c1-12)"
+  fi
+fi
 service_user="${AUTODISCOVER_SERVICE_USER:-${USER:-}}"
 install_dir="${AUTODISCOVER_INSTALL_DIR:-$PROJECT_ROOT}"
 use_service="${AUTODISCOVER_USE_SERVICE:-true}"
@@ -132,6 +141,7 @@ print(json.dumps({
   "repo_branch": ${repo_branch@Q},
   "install_dir": ${install_dir@Q},
   "service_name": ${service_name@Q},
+  "service_id": ${service_id@Q},
   "service_user": ${service_user@Q},
   "use_service": to_bool(${use_service@Q}),
   "autostart": to_bool(${autostart@Q}),
