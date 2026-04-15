@@ -121,71 +121,12 @@ Der Player ist auf niedrige Last im Dauerbetrieb optimiert:
   - Manifest wird per mtime überwacht.
   - Bei echter Änderung werden Caches gezielt invalidiert und neu aufgebaut.
 
-## Audio Node (MVP)
-
-Der Player enthält zusätzlich eine lokale Audio-Laufzeit mit Control-API.
-Bild/Manifest/Overlay bleiben unabhängig und laufen weiter wie bisher.
-
-Unterstützt:
-- lokale Audio-Datei (`mp3`, `wav`, `ogg`, abhängig vom Backend)
-- Webstream (`http`/`https`)
-
-Nicht in diesem Schritt:
-- Spotify
-- Bluetooth-Output-Routing
-- TTS-Quelle
-- Adminpanel-Integration
-
-### Audio-Abhängigkeiten
-
-Mindestens **eines** der folgenden Backends muss installiert sein:
-- `cvlc` (bevorzugt)
-- `ffplay`
-- `mpg123`
-
-Optional für Lautstärke-Steuerung:
-- `amixer` (alsa-utils) oder
-- `pactl`
-
-### Control API
+## Control API
 
 Default: `127.0.0.1:5081`
 
-Endpoints:
+Verfügbare Endpoints:
 - `GET /health`
 - `GET /player/status`
-- `POST /player/play-file`
-- `POST /player/play-stream`
-- `POST /player/stop`
-- `POST /player/pause`
-- `POST /player/resume`
-- `POST /player/volume`
 
-Beispiel:
-
-```bash
-curl -s http://127.0.0.1:5081/health | jq
-curl -s http://127.0.0.1:5081/player/status | jq
-
-curl -s -X POST http://127.0.0.1:5081/player/play-file \
-  -H 'Content-Type: application/json' \
-  -d '{"path":"/home/djanebmb/projects/Joormann-Media-DevicePlayer/runtime/audio/test.mp3"}' | jq
-
-curl -s -X POST http://127.0.0.1:5081/player/play-stream \
-  -H 'Content-Type: application/json' \
-  -d '{"url":"https://example.com/stream.mp3"}' | jq
-
-curl -s -X POST http://127.0.0.1:5081/player/volume \
-  -H 'Content-Type: application/json' \
-  -d '{"volume":65}' | jq
-```
-
-### Neue Env-Variablen
-
-- `DEVICEPLAYER_CONTROL_API_HOST` (default `127.0.0.1`)
-- `DEVICEPLAYER_CONTROL_API_PORT` (default `5081`)
-- `DEVICEPLAYER_AUDIO_DEFAULT_OUTPUT` (default `local`)
-- `DEVICEPLAYER_AUDIO_DEFAULT_VOLUME` (default `65`)
-- `DEVICEPLAYER_AUDIO_ALLOWED_ROOT` (default `<manifest-dir>/audio`)
-
-`play-file` ist auf `DEVICEPLAYER_AUDIO_ALLOWED_ROOT` beschränkt.
+Hinweis: Audio-/Radio-/TTS-Endpunkte wurden aus dem DisplayPlayer entfernt.

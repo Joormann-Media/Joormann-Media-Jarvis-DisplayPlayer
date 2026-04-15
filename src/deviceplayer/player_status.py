@@ -15,7 +15,6 @@ class RuntimeHealthSnapshot:
     service: str
     status: str
     render_runtime: str
-    audio_runtime: str
     player_check_available: bool
     timestamp: str
 
@@ -24,7 +23,6 @@ class RuntimeHealthSnapshot:
             "service": self.service,
             "status": self.status,
             "render_runtime": self.render_runtime,
-            "audio_runtime": self.audio_runtime,
             "player_check_available": self.player_check_available,
             "timestamp": self.timestamp,
         }
@@ -45,20 +43,18 @@ class PlayerRuntimeStatus:
         with self._lock:
             self._last_render_error = str(detail or "")
 
-    def health(self, *, audio_ok: bool) -> RuntimeHealthSnapshot:
+    def health(self) -> RuntimeHealthSnapshot:
         with self._lock:
             now = time.monotonic()
             render_alive = (now - self._last_render_tick) < 10.0 if self._last_render_tick > 0 else True
             render_runtime = "ok" if render_alive else "stale"
             if self._last_render_error:
                 render_runtime = "error"
-            audio_runtime = "ok" if audio_ok else "degraded"
-            overall = "healthy" if render_runtime == "ok" and audio_runtime == "ok" else "degraded"
+            overall = "healthy" if render_runtime == "ok" else "degraded"
             return RuntimeHealthSnapshot(
                 service="deviceplayer",
                 status=overall,
                 render_runtime=render_runtime,
-                audio_runtime=audio_runtime,
                 player_check_available=render_runtime == "ok",
                 timestamp=_ts(),
             )
@@ -69,4 +65,3 @@ class PlayerRuntimeStatus:
                 "uptime_seconds": int(max(0.0, time.monotonic() - self._started_at)),
                 "last_render_error": self._last_render_error,
             }
-

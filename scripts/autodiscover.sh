@@ -95,10 +95,6 @@ def tags_for(name):
         base.append("ocr")
     elif "smarthome" in n:
         base.append("smarthome")
-    elif "audio" in n:
-        base.append("audio")
-    elif "tts" in n:
-        base.append("tts")
     elif "whisper" in n:
         base.append("stt")
     elif "hotword" in n:
@@ -115,8 +111,6 @@ def caps_for(name):
         return ["ocr.upload", "ocr.pdf", "ocr.image"]
     if "smarthome" in n:
         return ["lights.onoff", "lights.brightness", "lights.color"]
-    if "tts" in n:
-        return ["tts.synthesize", "tts.voices"]
     if "whisper" in n:
         return ["stt.transcribe", "stt.mic"]
     if "hotword" in n:
@@ -125,8 +119,6 @@ def caps_for(name):
         return ["chat.generate"]
     if "display" in n:
         return ["display.playback"]
-    if "audio" in n:
-        return ["audio.play", "audio.stream", "audio.spotify"]
     return []
 
 raw_port = ${service_port@Q}

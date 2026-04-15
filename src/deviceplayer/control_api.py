@@ -5,9 +5,7 @@ import logging
 import threading
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Callable
 
-from .audio_manager import AudioManager
 from .player_status import PlayerRuntimeStatus
 
 
@@ -52,42 +50,15 @@ class _Handler(BaseHTTPRequestHandler):
         self._send(HTTPStatus.NOT_FOUND, {"ok": False, "error": "not_found"})
 
     def do_POST(self) -> None:  # noqa: N802
-        data = self._read_json()
-        if self.path == "/player/play-file":
-            result = self.server.audio.play_file(path=str(data.get("path") or ""), output=str(data.get("output") or "local"))
-            status = HTTPStatus.OK if result.get("ok") else HTTPStatus.BAD_REQUEST
-            self._send(status, result)
-            return
-        if self.path == "/player/play-stream":
-            result = self.server.audio.play_stream(url=str(data.get("url") or ""), output=str(data.get("output") or "local"))
-            status = HTTPStatus.OK if result.get("ok") else HTTPStatus.BAD_REQUEST
-            self._send(status, result)
-            return
-        if self.path == "/player/stop":
-            self._send(HTTPStatus.OK, self.server.audio.stop())
-            return
-        if self.path == "/player/pause":
-            result = self.server.audio.pause()
-            status = HTTPStatus.OK if result.get("ok") else HTTPStatus.BAD_REQUEST
-            self._send(status, result)
-            return
-        if self.path == "/player/resume":
-            result = self.server.audio.resume()
-            status = HTTPStatus.OK if result.get("ok") else HTTPStatus.BAD_REQUEST
-            self._send(status, result)
-            return
-        if self.path == "/player/volume":
-            if "volume" not in data:
-                self._send(HTTPStatus.BAD_REQUEST, {"ok": False, "error": "missing volume"})
-                return
-            try:
-                volume = int(data.get("volume"))
-            except Exception:
-                self._send(HTTPStatus.BAD_REQUEST, {"ok": False, "error": "volume must be integer"})
-                return
-            result = self.server.audio.set_volume(volume)
-            status = HTTPStatus.OK if result.get("ok") else HTTPStatus.BAD_REQUEST
-            self._send(status, result)
+        if self.path.startswith("/player/"):
+            self._send(
+                HTTPStatus.GONE,
+                {
+                    "ok": False,
+                    "error": "endpoint_removed",
+                    "detail": "Audio endpoints were removed from DisplayPlayer.",
+                },
+            )
             return
         self._send(HTTPStatus.NOT_FOUND, {"ok": False, "error": "not_found"})
 
@@ -101,25 +72,21 @@ class _ControlApiServer(ThreadingHTTPServer):
         host: str,
         port: int,
         *,
-        audio: AudioManager,
         runtime_status: PlayerRuntimeStatus,
         log: logging.Logger,
     ):
         super().__init__((host, port), _Handler)
-        self.audio = audio
         self.runtime_status = runtime_status
         self.log = log
 
     def build_health(self) -> dict:
-        st = self.audio.status()
-        audio_ok = st.get("state") != "error"
-        return self.runtime_status.health(audio_ok=audio_ok).as_dict()
+        return self.runtime_status.health().as_dict()
 
     def build_player_status(self) -> dict:
         health = self.build_health()
         return {
             "ok": True,
-            **self.audio.status(),
+            "state": "render-only",
             "health": health,
             "runtime": self.runtime_status.runtime_meta(),
         }
@@ -131,12 +98,11 @@ class PlayerControlApi:
         *,
         bind_host: str,
         bind_port: int,
-        audio: AudioManager,
         runtime_status: PlayerRuntimeStatus,
         logger: logging.Logger,
     ):
         self.log = logger
-        self._server = _ControlApiServer(bind_host, bind_port, audio=audio, runtime_status=runtime_status, log=logger)
+        self._server = _ControlApiServer(bind_host, bind_port, runtime_status=runtime_status, log=logger)
         self._thread: threading.Thread | None = None
 
     def start(self) -> None:
@@ -154,4 +120,3 @@ class PlayerControlApi:
         self._server.server_close()
         self._thread.join(timeout=3.0)
         self._thread = None
-

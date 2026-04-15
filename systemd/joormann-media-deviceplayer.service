@@ -7,7 +7,7 @@ Wants=network-online.target
 Type=simple
 User=djanebmb
 Group=djanebmb
-SupplementaryGroups=video render input audio
+SupplementaryGroups=video render input
 WorkingDirectory=/home/djanebmb/projects/Joormann-Media-DevicePlayer
 Environment=PYTHONUNBUFFERED=1
 Environment=SDL_AUDIODRIVER=dummy
@@ -20,9 +20,6 @@ Environment=DEVICEPLAYER_TRANSITION_FPS=30
 Environment=DEVICEPLAYER_IDLE_SLEEP_MS=200
 Environment=DEVICEPLAYER_CONTROL_API_HOST=127.0.0.1
 Environment=DEVICEPLAYER_CONTROL_API_PORT=5081
-Environment=DEVICEPLAYER_AUDIO_DEFAULT_OUTPUT=local
-Environment=DEVICEPLAYER_AUDIO_DEFAULT_VOLUME=65
-Environment=DEVICEPLAYER_AUDIO_ALLOWED_ROOT=/mnt/deviceportal/media/stream/current/audio
 ExecStart=/home/djanebmb/projects/Joormann-Media-DevicePlayer/.venv/bin/python /home/djanebmb/projects/Joormann-Media-DevicePlayer/run.py
 Restart=always
 RestartSec=3

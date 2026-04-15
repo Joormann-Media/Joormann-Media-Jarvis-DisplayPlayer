@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pygame
 
-from .audio_manager import AudioManager
 from .config import PlayerConfig
 from .control_api import PlayerControlApi
 from .logger import configure_logger
@@ -128,16 +127,9 @@ class DevicePlayerApp:
         overlay_renderer = OverlayRenderer(output_size)
         overlay_runtime = OverlayRuntime()
         runtime_status = PlayerRuntimeStatus()
-        audio_manager = AudioManager(
-            default_volume=self.config.audio_default_volume,
-            default_output=self.config.audio_default_output,
-            audio_root=self.config.audio_allowed_root,
-            logger=self.log,
-        )
         control_api = PlayerControlApi(
             bind_host=self.config.control_api_host,
             bind_port=self.config.control_api_port,
-            audio=audio_manager,
             runtime_status=runtime_status,
             logger=self.log,
         )
@@ -341,7 +333,6 @@ class DevicePlayerApp:
             raise
         finally:
             control_api.stop()
-            audio_manager.shutdown()
             pygame.quit()
 
         return 0
