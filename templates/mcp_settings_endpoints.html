@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MCP Endpoints – Jarvis Smarthome-Lab</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #f5f7fb; color: #0f172a; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 16px; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .muted { color: #64748b; font-size: 12px; }
+    .tbl { width:100%; border-collapse:collapse; font-size:13px; }
+    .tbl th { text-align:left; color:#475569; font-weight:600; padding:6px 8px; border-bottom:2px solid #e2e8f0; white-space:nowrap; }
+    .tbl td { padding:6px 8px; border-bottom:1px solid #f1f5f9; vertical-align:top; }
+    code { font-size:12px; }
+    .btn { cursor:pointer; font-weight:700; padding:8px 10px; border-radius:8px; border:1px solid #2563eb; background:#2563eb; color:#fff; }
+    .mcp-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .tab { text-decoration:none; color:#334155; border:1px solid #cbd5e1; border-radius:999px; padding:6px 10px; font-size:12px; }
+    .tab.active { background:#2563eb; border-color:#2563eb; color:#fff; }
+  </style>
+</head>
+<body>
+{% set active_page = "mcp" %}
+{% include "_nav.html" %}
+<div class="wrap">
+  <div class="card">
+    <h2 style="margin:0 0 6px 0;">MCP Settings · Endpoints</h2>
+    {% include "_mcp_settings_tabs.html" %}
+  </div>
+  <div class="card">
+    <button class="btn" id="btnRefresh">Refresh Endpoint Discovery</button>
+    <span class="muted" id="summary" style="margin-left:8px;"></span>
+    <div style="overflow:auto; margin-top:10px;">
+      <table class="tbl" id="tblEndpoints"><thead><tr>
+        <th>Path</th><th>Template</th><th>Methods</th><th>Provider</th><th>Kind</th><th>Operation</th><th>Risk</th><th>MCP</th><th>Ignored</th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+</div>
+<script>
+const el=id=>document.getElementById(id);
+const pill=(t)=>`<code>${t}</code>`;
+async function apiGet(url){ const r=await fetch(url,{headers:{Accept:'application/json'}}); const j=await r.json().catch(()=>({})); if(!r.ok||j.ok===false) throw new Error(j.message||j.error||('HTTP '+r.status)); return j; }
+async function apiPost(url,body){ const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body||{})}); const j=await r.json().catch(()=>({})); if(!r.ok||j.ok===false) throw new Error(j.message||j.error||('HTTP '+r.status)); return j; }
+function esc(v){ return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
+async function load(){ const d=await apiGet('/api/mcp/endpoints'); const rows=d.endpoints||[]; const tb=el('tblEndpoints').querySelector('tbody'); tb.innerHTML=''; rows.forEach(e=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td><code>${esc(e.path||'')}</code></td><td><code>${esc(e.path_template||'')}</code></td><td><code>${esc((e.methods||[]).join(', '))}</code></td><td><code>${esc(e.provider||'')}</code></td><td><code>${esc(e.kind||'')}</code></td><td><code>${esc(e.operation||'')}</code></td><td>${pill(e.risk_level||'')}</td><td>${e.mcp_candidate?'yes':'no'}</td><td>${e.ignored?'yes':'no'}</td>`; tb.appendChild(tr);}); el('summary').textContent=`${rows.length} endpoints`; }
+el('btnRefresh').addEventListener('click', async()=>{ await apiPost('/api/mcp/endpoints/refresh',{}); await load(); });
+load().catch(()=>{});
+</script>
+</body>
+</html>

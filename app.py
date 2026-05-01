@@ -19,11 +19,13 @@ import json
 from typing import Any
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
-from flask import Flask, jsonify, render_template, request, stream_with_context, Response
+from flask import Flask, jsonify, render_template, request, stream_with_context, Response, redirect
 
 from services.media_registry import MediaFolderRegistry, MediaFolderValidationError
 from services.media_scanner import MediaScanner
 from services.media_sync import MediaSyncService
+import mcp_audit
+import mcp_registry
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -1930,7 +1932,10 @@ def api_portal_sync():
     ok, status, payload = _do_portal_sync()
     if ok:
         _trigger_async_media_sync_after_link(reason="portal_sync_api")
-    return jsonify(payload), (200 if ok else status)
+    intent_sync = _do_portal_mcp_intents_sync()
+    body = dict(payload if isinstance(payload, dict) else {})
+    body["mcpIntentSync"] = intent_sync
+    return jsonify(body), (200 if ok else status)
 
 
 @app.post("/api/portal/heartbeat")
@@ -1998,6 +2003,206 @@ def api_display_realtime():
         content_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.get("/mcp-settings")
+def mcp_settings_page():
+    return redirect("/mcp-settings/overview", code=302)
+
+
+@app.get("/mcp-settings/overview")
+def mcp_settings_overview_page():
+    return render_template("mcp_settings_overview.html", mcp_tab="overview", active_page="mcp")
+
+
+@app.get("/mcp-settings/endpoints")
+def mcp_settings_endpoints_page():
+    return render_template("mcp_settings_endpoints.html", mcp_tab="endpoints", active_page="mcp")
+
+
+@app.get("/mcp-settings/simple")
+def mcp_settings_simple_page():
+    return render_template("mcp_settings_simple.html", mcp_tab="simple", active_page="mcp")
+
+
+@app.get("/mcp-settings/actions")
+def mcp_settings_actions_page():
+    return render_template("mcp_settings_actions.html", mcp_tab="actions", active_page="mcp")
+
+
+@app.get("/mcp-settings/export")
+def mcp_settings_export_page():
+    return render_template("mcp_settings_export.html", mcp_tab="export", active_page="mcp")
+
+
+def _validate_mcp_actions(items: Any) -> tuple[bool, str]:
+    if not isinstance(items, list):
+        return False, "Field 'actions' must be a list."
+    for idx, a in enumerate(items):
+        if not isinstance(a, dict):
+            return False, f"actions[{idx}] must be an object."
+        action_id = str(a.get("id") or "").strip()
+        tool_name = str(a.get("tool_name") or "").strip()
+        if not action_id or not tool_name:
+            return False, f"actions[{idx}] requires 'id' and 'tool_name'."
+        risk = str(a.get("risk_level") or "").strip().lower()
+        enabled = bool(a.get("enabled", False))
+        if risk == "dangerous" and enabled:
+            return False, f"actions[{idx}] cannot be enabled when risk_level is 'dangerous'."
+        endpoint_template = str(a.get("endpoint_template") or "").strip()
+        if enabled and (
+            endpoint_template.startswith("/api/credentials")
+            or endpoint_template.startswith("/api/config")
+            or endpoint_template.startswith("/api/update")
+            or endpoint_template.startswith("/api/portal")
+            or "/debug/" in endpoint_template
+        ):
+            return False, f"actions[{idx}] cannot be enabled for credentials/config/update/portal/debug endpoints."
+        phase = str(a.get("phase") or "").strip()
+        if phase and phase not in {"candidate", "readonly", "dry_run", "enabled"}:
+            return False, f"actions[{idx}].phase must be one of: candidate, readonly, dry_run, enabled."
+    return True, ""
+
+
+def _permission_key_from_action(action: dict[str, Any]) -> str:
+    action_key = str(action.get("tool_name") or action.get("id") or "").strip()
+    if not action_key:
+        return ""
+    return hashlib.sha1(action_key.encode("utf-8")).hexdigest()[:8]
+
+
+def _apply_permission_keys(actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for item in actions or []:
+        if not isinstance(item, dict):
+            continue
+        row = dict(item)
+        row["permission"] = _permission_key_from_action(row)
+        out.append(row)
+    return out
+
+
+@app.get("/api/mcp/endpoints")
+def api_mcp_endpoints():
+    endpoints = mcp_registry.load_mcp_endpoints()
+    if not endpoints:
+        endpoints = mcp_registry.discover_flask_endpoints(app)
+        mcp_registry.save_mcp_endpoints(endpoints)
+    return jsonify(ok=True, count=len(endpoints), endpoints=endpoints)
+
+
+@app.post("/api/mcp/endpoints/refresh")
+def api_mcp_endpoints_refresh():
+    endpoints = mcp_registry.discover_flask_endpoints(app)
+    mcp_registry.save_mcp_endpoints(endpoints)
+    summary: dict[str, Any] = {"total": len(endpoints), "by_category": {}, "by_risk": {}}
+    for e in endpoints:
+        cat = str(e.get("category") or "unknown")
+        risk = str(e.get("risk_level") or "unknown")
+        summary["by_category"][cat] = int(summary["by_category"].get(cat, 0)) + 1
+        summary["by_risk"][risk] = int(summary["by_risk"].get(risk, 0)) + 1
+    mcp_audit.write_mcp_audit("endpoint_refresh", {"summary": summary})
+    return jsonify(ok=True, summary=summary)
+
+
+@app.get("/api/mcp/actions")
+def api_mcp_actions():
+    actions = mcp_registry.load_mcp_actions()
+    normalized = _apply_permission_keys(actions)
+    if normalized != actions:
+        mcp_registry.save_mcp_actions(normalized)
+    return jsonify(ok=True, count=len(normalized), actions=normalized)
+
+
+@app.post("/api/mcp/actions/generate-light-candidates")
+def api_mcp_actions_generate_light_candidates():
+    endpoints = mcp_registry.load_mcp_endpoints()
+    if not endpoints:
+        endpoints = mcp_registry.discover_flask_endpoints(app)
+        mcp_registry.save_mcp_endpoints(endpoints)
+    existing = mcp_registry.load_mcp_actions()
+    generated = mcp_registry.generate_light_action_candidates(endpoints, existing_actions=existing)
+    generated = _apply_permission_keys(generated)
+    mcp_registry.save_mcp_actions(generated)
+    summary = {"endpoints_count": len(endpoints), "actions_total": len(generated)}
+    mcp_audit.write_mcp_audit("action_generate", {"summary": summary})
+    return jsonify(ok=True, summary=summary, count=len(generated), actions=generated)
+
+
+@app.post("/api/mcp/actions/save")
+def api_mcp_actions_save():
+    body = request.get_json(silent=True) or {}
+    actions = body.get("actions")
+    ok, err = _validate_mcp_actions(actions)
+    if not ok:
+        return _api_err("bad_request", err, 400)
+    normalized = _apply_permission_keys(actions)
+    mcp_registry.save_mcp_actions(normalized)
+    mcp_audit.write_mcp_audit("action_save", {"count": len(normalized or [])})
+    return jsonify(ok=True, count=len(normalized or []), actions=normalized)
+
+
+@app.get("/api/mcp/export")
+def api_mcp_export():
+    actions = mcp_registry.load_mcp_actions()
+    payload = mcp_registry.export_enabled_mcp_tools(actions)
+    mcp_audit.write_mcp_audit("export_config", {"enabled_count": len(payload.get("actions") or [])})
+    return jsonify(ok=True, export=payload)
+
+
+def _build_mcp_intents_payload() -> list[dict[str, Any]]:
+    actions = mcp_registry.load_mcp_actions()
+    exported = mcp_registry.export_enabled_mcp_tools(actions)
+    out: list[dict[str, Any]] = []
+    for action in exported.get("actions") or []:
+        if not isinstance(action, dict):
+            continue
+        action_key = str(action.get("tool_name") or action.get("id") or "").strip().lower()
+        if not action_key:
+            continue
+        out.append(
+            {
+                "intentKey": action_key.replace(".", "_"),
+                "actionKey": action_key,
+                "name": str(action.get("display_name") or action_key),
+                "description": str(action.get("description") or ""),
+                "permissionKey": str(action.get("permission") or ""),
+                "operation": str(action.get("operation") or ""),
+                "capability": str(action.get("capability") or ""),
+                "httpMethod": str(action.get("http_method") or ""),
+                "endpointTemplate": str(action.get("endpoint_template") or ""),
+                "phase": str(action.get("phase") or ""),
+                "riskLevel": str(action.get("risk_level") or ""),
+                "requiredParams": action.get("required_params") if isinstance(action.get("required_params"), list) else [],
+                "optionalParams": action.get("optional_params") if isinstance(action.get("optional_params"), list) else [],
+                "source": "mcp",
+            }
+        )
+    return out
+
+
+def _do_portal_mcp_intents_sync(cfg: dict[str, Any] | None = None) -> dict[str, Any]:
+    cfg = cfg or _load_portal_config()
+    portal_url = str(cfg.get("url") or "").strip()
+    client_id = str(cfg.get("client_id") or "").strip()
+    api_key = str(cfg.get("api_key") or "").strip()
+    if not portal_url or not client_id or not api_key:
+        return {"ok": False, "error": "not_registered", "message": "Portal-Credentials fehlen."}
+    payload = {"clientId": client_id, "apiKey": api_key, "intents": _build_mcp_intents_payload()}
+    ok, status_code, resp, err = _http_post_json(
+        f"{portal_url.rstrip('/')}/api/jarvis/node/intents/sync", payload, timeout=15
+    )
+    if not ok and not resp:
+        return {"ok": False, "error": "portal_unreachable", "message": str(err)}
+    if not bool(resp.get("ok")):
+        return {
+            "ok": False,
+            "error": "sync_failed",
+            "status": int(status_code or 502),
+            "message": str(resp.get("message") or "MCP-Intent-Sync fehlgeschlagen."),
+            "detail": resp,
+        }
+    return {"ok": True, "response": resp}
 
 
 # ---------------------------------------------------------------------------

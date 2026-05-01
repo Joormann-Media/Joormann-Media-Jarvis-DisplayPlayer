@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MCP Settings Overview – Jarvis Smarthome-Lab</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #f5f7fb; color: #0f172a; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 16px; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .muted { color: #64748b; font-size: 12px; }
+    .mcp-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .tab { text-decoration:none; color:#334155; border:1px solid #cbd5e1; border-radius:999px; padding:6px 10px; font-size:12px; }
+    .tab.active { background:#2563eb; border-color:#2563eb; color:#fff; }
+    .grid { display:grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap:10px; }
+    .kpi { border:1px solid #e2e8f0; border-radius:10px; padding:10px; background:#fff; }
+    .kpi .v { font-size:22px; font-weight:700; }
+    @media (max-width:800px){ .grid{ grid-template-columns:1fr 1fr; } }
+    @media (max-width:560px){ .grid{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+{% set active_page = "mcp" %}
+{% include "_nav.html" %}
+<div class="wrap">
+  <div class="card">
+    <h2 style="margin:0 0 6px 0;">MCP Settings</h2>
+    <div class="muted">Endpoint Discovery + Action Registry for Smarthome MCP tools</div>
+    {% include "_mcp_settings_tabs.html" %}
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 10px 0;">Status</h3>
+    <div class="grid">
+      <div class="kpi"><div class="muted">Endpoints</div><div id="kpiEndpoints" class="v">-</div></div>
+      <div class="kpi"><div class="muted">Actions</div><div id="kpiActions" class="v">-</div></div>
+      <div class="kpi"><div class="muted">Enabled</div><div id="kpiEnabled" class="v">-</div></div>
+      <div class="kpi"><div class="muted">Readonly Enabled</div><div id="kpiReadonly" class="v">-</div></div>
+    </div>
+  </div>
+</div>
+<script>
+async function apiGet(url){ const r=await fetch(url,{headers:{Accept:'application/json'}}); const j=await r.json().catch(()=>({})); if(!r.ok||j.ok===false) throw new Error(j.message||j.error||('HTTP '+r.status)); return j; }
+(async()=>{
+  const e=await apiGet('/api/mcp/endpoints');
+  const a=await apiGet('/api/mcp/actions');
+  const rows=a.actions||[];
+  document.getElementById('kpiEndpoints').textContent=(e.count ?? (e.endpoints||[]).length);
+  document.getElementById('kpiActions').textContent=(a.count ?? rows.length);
+  document.getElementById('kpiEnabled').textContent=rows.filter(x=>x&&x.enabled).length;
+  document.getElementById('kpiReadonly').textContent=rows.filter(x=>x&&x.enabled&&x.phase==='readonly').length;
+})().catch(()=>{});
+</script>
+</body>
+</html>

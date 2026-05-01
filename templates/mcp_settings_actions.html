@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MCP Actions – Jarvis Smarthome-Lab</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #f5f7fb; color: #0f172a; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 16px; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .muted { color: #64748b; font-size: 12px; }
+    .btn { cursor: pointer; font-weight: 700; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; }
+    .btn-primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .pill { display:inline-block; border-radius:999px; padding: 2px 8px; font-size: 11px; border: 1px solid #cbd5e1; color:#475569; }
+    .pill-low { background:#dcfce7; border-color:#86efac; color:#166534; }
+    .pill-medium { background:#fef9c3; border-color:#fde047; color:#854d0e; }
+    .pill-high { background:#fee2e2; border-color:#fecaca; color:#991b1b; }
+    .action-list { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    .action-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px; background: #fff; }
+    .action-top { display: grid; grid-template-columns: minmax(260px, 1.6fr) repeat(4, minmax(90px, auto)); gap: 8px; align-items: center; }
+    .action-meta, .action-details, .action-keys { display:grid; gap:8px; margin-top:8px; }
+    .action-meta { grid-template-columns: repeat(4, minmax(120px, 1fr)); }
+    .action-details { border-top: 1px solid #f1f5f9; padding-top: 8px; grid-template-columns: repeat(3, minmax(180px, 1fr)); }
+    .action-keys { grid-template-columns: 1fr 1fr; }
+    .action-help { margin-top:8px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:8px; font-size:12px; color:#0f172a; }
+    .action-help .muted { display:block; margin-top:4px; }
+    .related-wrap { margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+    .related-title { font-size:11px; color:#64748b; margin-right:4px; }
+    .related-chip { border:1px solid #cbd5e1; border-radius:999px; padding:2px 8px; font-size:11px; color:#334155; background:#f8fafc; }
+    .field label { display:block; font-size:11px; color:#64748b; margin-bottom:4px; }
+    .action-flags { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .action-flags label { font-size:12px; color:#334155; display:flex; align-items:center; gap:4px; }
+    input[type="text"], select, textarea { width: 100%; box-sizing: border-box; padding: 7px 8px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; }
+    textarea { min-height: 34px; resize: vertical; }
+    .mcp-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .tab { text-decoration:none; color:#334155; border:1px solid #cbd5e1; border-radius:999px; padding:6px 10px; font-size:12px; }
+    .tab.active { background:#2563eb; border-color:#2563eb; color:#fff; }
+    @media (max-width: 980px) { .action-top, .action-meta, .action-details, .action-keys { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 640px) { .action-top, .action-meta, .action-details, .action-keys { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+{% set active_page = "mcp" %}
+{% include "_nav.html" %}
+<div class="wrap">
+  <div class="card">
+    <h2 style="margin:0 0 6px 0;">MCP Settings · Actions</h2>
+    {% include "_mcp_settings_tabs.html" %}
+  </div>
+  <div class="card">
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnGenerate">Generate Light Action Candidates</button>
+      <button class="btn" id="btnSave">Save Mapping</button>
+      <span class="muted" id="summaryText"></span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="action-list" id="actionList"></div>
+  </div>
+</div>
+<script>
+const state={actions:[]}; const el=id=>document.getElementById(id);
+const pill=(text, cls)=>`<span class="pill ${cls||''}">${text}</span>`;
+const riskPill=(risk)=>{const r=(risk||'unknown').toLowerCase();const c=r==='low'?'pill-low':r==='medium'?'pill-medium':r==='high'?'pill-high':'';return pill(r,c);};
+const esc=(v)=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
+const endpointGroupKey=(tpl)=>String(tpl||'').replaceAll('{provider}','*').replaceAll('{device_id}','*').replaceAll('{light_id}','*');
+function inferActionHelp(a){
+  const op=(a.operation||'').toLowerCase();
+  const cap=(a.capability||'').toLowerCase();
+  const req=(a.required_params||[]).join(', ') || 'keine Pflichtparameter';
+  if(op==='multi_execute') return `Führt mehrere Geräteaktionen in einem Request aus (provider-übergreifend).`;
+  if(op==='multi_status') return `Liest den IST-Status mehrerer Targets in einem Request (provider-übergreifend).`;
+  if(op==='list_devices' || op==='list') return `Listet verfügbare Geräte/Lichter für Auswahl und Folgeaktionen auf.`;
+  if(op==='get_state' || op==='status') return `Liest den aktuellen Zustand eines Geräts/Providers ohne Zustandsänderung.`;
+  if(op==='on_off' || op==='on' || op==='off') return `Schaltet Gerät(e) ein/aus (Write-Action).`;
+  if(op==='set_state' || op==='state') return `Setzt kombinierten Zustand (z. B. Power/Helligkeit/Farbe je nach Provider).`;
+  if(op==='set_brightness' || op==='brightness') return `Setzt Helligkeit auf dem Zielgerät.`;
+  if(op==='set_color' || op==='color') return `Setzt Farbe auf dem Zielgerät.`;
+  if(op==='set_colortemp' || op==='colortemp' || cap.includes('colortemp')) return `Setzt Farbtemperatur (oder provider-spezifische Temperaturwerte).`;
+  if(op==='sync') return `Synchronisiert Daten/Konfiguration mit externer Quelle.`;
+  return `Generische Action; benötigte Eingaben: ${req}.`;
+}
+function inferDependencies(a){
+  const deps=[];
+  const req=a.required_params||[];
+  if(req.includes('provider')) deps.push('Provider-Auswahl nötig');
+  if(req.includes('device_id')) deps.push('Device-ID nötig');
+  if(req.includes('targets')) deps.push('Targets-Liste nötig');
+  if(req.includes('payload')) deps.push('Payload-Schema nötig');
+  if((a.phase||'')==='candidate') deps.push('nicht live (candidate)');
+  if((a.http_method||'').toUpperCase()!=='GET') deps.push('Write-Action');
+  return deps;
+}
+async function apiGet(url){ const r=await fetch(url,{headers:{Accept:'application/json'}}); const j=await r.json().catch(()=>({})); if(!r.ok||j.ok===false) throw new Error(j.message||j.error||('HTTP '+r.status)); return j; }
+async function apiPost(url,b){ const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(b||{})}); const j=await r.json().catch(()=>({})); if(!r.ok||j.ok===false) throw new Error(j.message||j.error||('HTTP '+r.status)); return j; }
+function renderActions(){
+  const list=el('actionList');
+  list.innerHTML='';
+  const byCap={};
+  const byEndpointGroup={};
+  for(const a of state.actions){
+    const cap=String(a.capability||'unknown');
+    const epg=endpointGroupKey(a.endpoint_template);
+    byCap[cap]=(byCap[cap]||0)+1;
+    byEndpointGroup[epg]=(byEndpointGroup[epg]||0)+1;
+  }
+  for(const a of state.actions){
+    const actionKey=(a.tool_name||a.id||'').trim();
+    const cap=String(a.capability||'unknown');
+    const epg=endpointGroupKey(a.endpoint_template);
+    const related=[];
+    if((byCap[cap]||0)>1) related.push(`Capability-Gruppe: ${cap} (${byCap[cap]})`);
+    if((byEndpointGroup[epg]||0)>1) related.push(`Endpoint-Familie: ${epg} (${byEndpointGroup[epg]})`);
+    if((a.provider||'')==='aggregation') related.push('Aggregation-Action (cross-provider)');
+    const deps=inferDependencies(a);
+    const card=document.createElement('div');
+    card.className='action-card';
+    card.dataset.actionId=a.id;
+    card.innerHTML=`<div class="action-top"><div><code>${esc(actionKey)}</code><div class="muted"><code>${esc(a.id||'')}</code></div></div><div class="field"><label>Enabled</label><input type="checkbox" data-k="enabled" ${a.enabled?'checked':''}></div><div class="field"><label>Phase</label><select data-k="phase">${['candidate','readonly','dry_run','enabled'].map(p=>`<option value="${p}" ${a.phase===p?'selected':''}>${p}</option>`).join('')}</select></div><div class="field"><label>Risk</label>${riskPill(a.risk_level)}</div><div class="field"><label>Provider</label><code>${esc(a.provider||'')}</code></div></div><div class="action-help"><strong>Info:</strong> ${esc(inferActionHelp(a))}<span class="muted"><strong>Benötigt:</strong> ${esc((a.required_params||[]).join(', ')||'—')} · <strong>Optional:</strong> ${esc((a.optional_params||[]).join(', ')||'—')}</span></div><div class="related-wrap">${related.length?`<span class="related-title">Zusammenhang:</span>${related.map(x=>`<span class="related-chip">${esc(x)}</span>`).join('')}`:'<span class="related-title">Zusammenhang: keine direkte Gruppe</span>'}</div><div class="related-wrap">${deps.length?`<span class="related-title">Abhängigkeiten:</span>${deps.map(x=>`<span class="related-chip">${esc(x)}</span>`).join('')}`:''}</div><div class="action-meta"><div class="field"><label>Capability</label><code>${esc(a.capability||'')}</code></div><div class="field"><label>Operation</label><code>${esc(a.operation||'')}</code></div><div class="field"><label>HTTP</label><code>${esc(a.http_method||'')}</code></div><div class="field"><label>Endpoint</label><code>${esc(a.endpoint_template||'')}</code></div></div><div class="action-keys"><div class="field"><label>Permission Key</label><input type="text" data-k="permission" value="${esc(a.permission||'')}"></div><div class="field"><label>Role Key</label><input type="text" data-k="required_role" value="${esc(a.required_role||'')}"></div></div><div class="action-details"><div class="field"><label>Security Flags</label><div class="action-flags"><label><input type="checkbox" data-k="requires_confirmation" ${a.requires_confirmation?'checked':''}> confirm</label><label><input type="checkbox" data-k="dry_run_supported" ${a.dry_run_supported?'checked':''}> dry-run</label><label><input type="checkbox" data-k="audit_enabled" ${a.audit_enabled?'checked':''}> audit</label></div></div><div class="field"><label>Required Params</label><code>${esc((a.required_params||[]).join(', '))||'—'}</code></div><div class="field"><label>Optional Params</label><code>${esc((a.optional_params||[]).join(', '))||'—'}</code></div><div class="field" style="grid-column:1/-1;"><label>Notes</label><textarea data-k="notes">${esc(a.notes||'')}</textarea></div></div>`;
+    list.appendChild(card);
+  }
+  el('summaryText').textContent=`${state.actions.length} actions`;
+  list.querySelectorAll('input,select,textarea').forEach(i=>i.addEventListener('change',ev=>{const card=ev.target.closest('.action-card');const id=card?card.dataset.actionId:'';const key=ev.target.dataset.k;const a=state.actions.find(x=>x.id===id); if(!a)return; if(ev.target.type==='checkbox')a[key]=!!ev.target.checked; else a[key]=ev.target.value;}));
+}
+async function load(){ const d=await apiGet('/api/mcp/actions'); state.actions=d.actions||[]; renderActions(); }
+el('btnGenerate').addEventListener('click', async()=>{ const d=await apiPost('/api/mcp/actions/generate-light-candidates',{}); state.actions=d.actions||[]; renderActions(); });
+el('btnSave').addEventListener('click', async()=>{ await apiPost('/api/mcp/actions/save',{actions:state.actions}); });
+load().catch(()=>{});
+</script>
+</body>
+</html>

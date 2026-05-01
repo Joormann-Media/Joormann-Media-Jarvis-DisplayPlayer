@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MCP Simple – Jarvis Smarthome-Lab</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #f5f7fb; color: #0f172a; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 16px; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .muted { color: #64748b; font-size: 12px; }
+    .mcp-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .tab { text-decoration:none; color:#334155; border:1px solid #cbd5e1; border-radius:999px; padding:6px 10px; font-size:12px; }
+    .tab.active { background:#2563eb; border-color:#2563eb; color:#fff; }
+    .tbl { width:100%; border-collapse:collapse; font-size:13px; }
+    .tbl th { text-align:left; color:#475569; font-weight:600; padding:8px; border-bottom:2px solid #e2e8f0; }
+    .tbl td { padding:8px; border-bottom:1px solid #f1f5f9; vertical-align:top; }
+    code { font-size:12px; }
+    .k { white-space: nowrap; }
+    @media (max-width: 900px) {
+      .tbl, .tbl thead, .tbl tbody, .tbl th, .tbl td, .tbl tr { display:block; }
+      .tbl thead { display:none; }
+      .tbl tr { border:1px solid #e2e8f0; border-radius:10px; margin-bottom:8px; }
+      .tbl td { border:none; padding:6px 8px; }
+      .tbl td::before { display:block; font-size:11px; color:#64748b; margin-bottom:2px; }
+      .tbl td:nth-child(1)::before { content:"Action Name"; }
+      .tbl td:nth-child(2)::before { content:"Action Key"; }
+      .tbl td:nth-child(3)::before { content:"Permission Key"; }
+      .tbl td:nth-child(4)::before { content:"Kurzinfo"; }
+    }
+  </style>
+</head>
+<body>
+{% set active_page = "mcp" %}
+{% include "_nav.html" %}
+<div class="wrap">
+  <div class="card">
+    <h2 style="margin:0 0 6px 0;">MCP Settings · Simple</h2>
+    <div class="muted">Reduzierte Übersicht für schnelle Freigabe.</div>
+    {% include "_mcp_settings_tabs.html" %}
+  </div>
+
+  <div class="card">
+    <div class="muted" id="summary" style="margin-bottom:8px;">Lade…</div>
+    <table class="tbl" id="tblSimple">
+      <thead>
+        <tr>
+          <th>Action Name</th>
+          <th>Action Key</th>
+          <th>Permission Key</th>
+          <th>Kurzinfo</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+<script>
+const el=(id)=>document.getElementById(id);
+const esc=(v)=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
+async function apiGet(url){ const r=await fetch(url,{headers:{Accept:'application/json'}}); const j=await r.json().catch(()=>({})); if(!r.ok||j.ok===false) throw new Error(j.message||j.error||('HTTP '+r.status)); return j; }
+function shortInfo(a){
+  const op=String(a.operation||'').toLowerCase();
+  const cap=String(a.capability||'').toLowerCase();
+  if(op==='multi_execute') return 'Mehrere Geräteaktionen gleichzeitig ausführen.';
+  if(op==='multi_status') return 'Status mehrerer Geräte gleichzeitig abfragen.';
+  if(op==='get_state' || op==='status') return 'Aktuellen Zustand lesen (read-only).';
+  if(op==='list_devices' || op==='list') return 'Geräteliste für Auswahl anzeigen.';
+  if(op==='on_off' || op==='on' || op==='off') return 'Geräte ein/aus schalten.';
+  if(op==='set_state' || op==='state') return 'Gerätezustand setzen (Power/Farbe/Helligkeit je nach Provider).';
+  if(op==='set_brightness' || op==='brightness') return 'Helligkeit setzen.';
+  if(op==='set_color' || op==='color') return 'Farbe setzen.';
+  if(op==='set_colortemp' || op==='colortemp' || cap.includes('colortemp')) return 'Farbtemperatur setzen.';
+  if(op==='sync') return 'Daten synchronisieren.';
+  return 'Spezialaktion; Details im Actions-Tab.';
+}
+async function load(){
+  const d=await apiGet('/api/mcp/actions');
+  const rows=(d.actions||[]).slice().sort((a,b)=>String(a.tool_name||a.id||'').localeCompare(String(b.tool_name||b.id||'')));
+  const tb=el('tblSimple').querySelector('tbody');
+  tb.innerHTML='';
+  for(const a of rows){
+    const tr=document.createElement('tr');
+    const actionName=String(a.display_name||a.id||a.tool_name||'').trim();
+    const actionKey=String(a.tool_name||a.id||'').trim();
+    const permission=String(a.permission||'').trim() || '—';
+    tr.innerHTML=`<td>${esc(actionName)}</td><td class="k"><code>${esc(actionKey)}</code></td><td class="k"><code>${esc(permission)}</code></td><td>${esc(shortInfo(a))}</td>`;
+    tb.appendChild(tr);
+  }
+  el('summary').textContent=`${rows.length} Actions`;
+}
+load().catch(()=>{ el('summary').textContent='Laden fehlgeschlagen'; });
+</script>
+</body>
+</html>
