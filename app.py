@@ -2108,6 +2108,15 @@ def api_mcp_endpoints_refresh():
 @app.get("/api/mcp/actions")
 def api_mcp_actions():
     actions = mcp_registry.load_mcp_actions()
+    # Auto-migrate legacy smarthome mappings to domain-specific actions.
+    if any(str(a.get("tool_name") or "").startswith("smarthome.") for a in actions if isinstance(a, dict)):
+        endpoints = mcp_registry.load_mcp_endpoints()
+        if not endpoints:
+            endpoints = mcp_registry.discover_flask_endpoints(app)
+            mcp_registry.save_mcp_endpoints(endpoints)
+        actions = mcp_registry.generate_light_action_candidates(endpoints, existing_actions=[])
+        mcp_registry.save_mcp_actions(actions)
+        mcp_audit.write_mcp_audit("action_migrate_legacy_smarthome", {"count": len(actions)})
     normalized = _apply_permission_keys(actions)
     if normalized != actions:
         mcp_registry.save_mcp_actions(normalized)
