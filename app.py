@@ -1942,11 +1942,11 @@ def api_portal_relink():
 @app.post("/api/portal/sync")
 def api_portal_sync():
     ok, status, payload = _do_portal_sync()
-    if ok:
-        _trigger_async_media_sync_after_link(reason="portal_sync_api")
+    media_sync = _sync_all_active_folders_to_panel(reason="portal_sync_api") if ok else {"processed": 0, "ok": 0, "errors": []}
     intent_sync = _do_portal_mcp_intents_sync()
     body = dict(payload if isinstance(payload, dict) else {})
     body["mcpIntentSync"] = intent_sync
+    body["mediaFolderSync"] = media_sync
     return jsonify(body), (200 if ok else status)
 
 
