@@ -1587,6 +1587,16 @@ def _parse_port_from_url(raw: str) -> int | None:
     return None
 
 
+def _host_matches_local(host_value: str) -> bool:
+    host = str(host_value or "").strip().lower()
+    if not host:
+        return True
+    local = socket.gethostname().strip().lower()
+    local_short = local.split(".", 1)[0]
+    host_short = host.split(".", 1)[0]
+    return host in {local, local_short} or host_short in {local, local_short}
+
+
 def _service_label_from_entry(service_name: str, fallback: str = "") -> str:
     s = str(service_name or "").strip().lower()
     if "audioplayer" in s:
@@ -1630,17 +1640,22 @@ def _local_peer_modules() -> list[dict[str, Any]]:
             if not isinstance(row, dict):
                 continue
             host = str(row.get("hostname") or row.get("node_name") or "").strip().lower()
-            if host and host != current_host:
+            if host and not _host_matches_local(host):
                 continue
             service_name = str(row.get("service_name") or row.get("name") or "").strip()
             port = None
             for candidate in (
                 row.get("port"),
                 row.get("flask_port"),
+                row.get("service_port"),
                 row.get("baseUrl"),
                 row.get("localUrl"),
                 row.get("apiBaseUrl"),
+                row.get("api_base_url"),
+                row.get("ui_url"),
                 row.get("url"),
+                ((row.get("endpoints") or {}).get("api_base") if isinstance(row.get("endpoints"), dict) else None),
+                ((row.get("endpoints") or {}).get("ui") if isinstance(row.get("endpoints"), dict) else None),
             ):
                 if isinstance(candidate, (int, float)):
                     port = int(candidate)
