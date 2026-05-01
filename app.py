@@ -1574,6 +1574,110 @@ def api_dashboard_overview():
     }, "", 200)
 
 
+def _parse_port_from_url(raw: str) -> int | None:
+    text = str(raw or "").strip()
+    if not text:
+        return None
+    try:
+        parsed = urlparse(text if "://" in text else f"http://{text}")
+        if parsed.port:
+            return int(parsed.port)
+    except Exception:
+        return None
+    return None
+
+
+def _service_label_from_entry(service_name: str, fallback: str = "") -> str:
+    s = str(service_name or "").strip().lower()
+    if "audioplayer" in s:
+        return "AudioPlayer"
+    if "displayplayer" in s:
+        return "DisplayPlayer"
+    if "smarthome" in s:
+        return "Smarthome-Lab"
+    if "llm-lab" in s:
+        return "LLM-Lab"
+    if "tts-lab" in s:
+        return "TTS-Lab"
+    if "audio-lab" in s:
+        return "Audio-Lab"
+    return str(fallback or service_name or "Module").strip()
+
+
+def _local_peer_modules() -> list[dict[str, Any]]:
+    current_host = socket.gethostname().strip().lower()
+    out: list[dict[str, Any]] = []
+    seen_ports: set[int] = set()
+    config_paths: list[Path] = []
+    override = str(os.getenv("DEVICE_PORTAL_CONFIG_JSON") or "").strip()
+    if override:
+        config_paths.append(Path(override))
+    config_paths.extend(DEVICE_PORTAL_CONFIG_PATHS)
+
+    for path in config_paths:
+        try:
+            if not path.exists():
+                continue
+            raw = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if not isinstance(raw, dict):
+            continue
+        rows = raw.get("autodiscover_services")
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            host = str(row.get("hostname") or row.get("node_name") or "").strip().lower()
+            if host and host != current_host:
+                continue
+            service_name = str(row.get("service_name") or row.get("name") or "").strip()
+            port = None
+            for candidate in (
+                row.get("port"),
+                row.get("flask_port"),
+                row.get("baseUrl"),
+                row.get("localUrl"),
+                row.get("apiBaseUrl"),
+                row.get("url"),
+            ):
+                if isinstance(candidate, (int, float)):
+                    port = int(candidate)
+                    break
+                parsed_port = _parse_port_from_url(str(candidate or ""))
+                if parsed_port:
+                    port = parsed_port
+                    break
+            if not port or port <= 0:
+                continue
+            if port in seen_ports:
+                continue
+            seen_ports.add(port)
+            out.append(
+                {
+                    "name": _service_label_from_entry(service_name, str(row.get("name") or "").strip()),
+                    "serviceName": service_name,
+                    "port": port,
+                    "source": "deviceportal-autodiscover",
+                }
+            )
+
+    current_port = int(os.getenv("FLASK_PORT", "5092"))
+    if current_port not in seen_ports:
+        out.append(
+            {
+                "name": "DisplayPlayer",
+                "serviceName": "joormann-media-jarvis-displayplayer.service",
+                "port": current_port,
+                "source": "self",
+            }
+        )
+
+    out.sort(key=lambda item: (int(item.get("port") or 0), str(item.get("name") or "").lower()))
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Flask routes — media folder management
 # ---------------------------------------------------------------------------
@@ -1731,6 +1835,12 @@ def api_portal_status():
         "apiKeyMasked": ("***" + str(cfg.get("api_key") or "")[-4:]) if cfg.get("api_key") else None,
         "heartbeatInterval": int(cfg.get("heartbeat_interval") or 60),
     }, "", 200)
+
+
+@app.get("/api/portal/peers")
+def api_portal_peers():
+    peers = _local_peer_modules()
+    return make_response(True, "ok", {"peers": peers}, "", 200)
 
 
 @app.post("/api/portal/register")
