@@ -1879,16 +1879,26 @@ def api_portal_register():
 @app.post("/api/portal/relink")
 def api_portal_relink():
     body = request.get_json(silent=True) or {}
-    portal_url = str(body.get("portal_url") or "").strip()
-    uuid_value = str(body.get("uuid") or body.get("node_uuid") or "").strip()
-    slug_value = str(body.get("slug") or body.get("node_slug") or "").strip()
-    client_id = str(body.get("client_id") or body.get("clientId") or "").strip()
-    mac_address = str(body.get("mac_address") or body.get("macAddress") or "").strip()
+    current_cfg = _load_portal_config()
+    portal_url = str(body.get("portal_url") or current_cfg.get("url") or "").strip()
+    uuid_value = str(body.get("uuid") or body.get("node_uuid") or current_cfg.get("node_uuid") or "").strip()
+    slug_value = str(body.get("slug") or body.get("node_slug") or current_cfg.get("node_slug") or "").strip()
+    client_id = str(body.get("client_id") or body.get("clientId") or current_cfg.get("client_id") or "").strip()
+    mac_address = str(body.get("mac_address") or body.get("macAddress") or current_cfg.get("mac_address") or _get_mac_address() or "").strip()
 
     if not portal_url:
         return _api_err("portal_url_missing", "Feld 'portal_url' ist erforderlich.", 400)
     if not uuid_value or not slug_value or not client_id or not mac_address:
-        return _api_err("relink_fields_missing", "Felder 'uuid', 'slug', 'client_id' und 'mac_address' sind erforderlich.", 400)
+        missing: list[str] = []
+        if not uuid_value:
+            missing.append("uuid")
+        if not slug_value:
+            missing.append("slug")
+        if not client_id:
+            missing.append("client_id")
+        if not mac_address:
+            missing.append("mac_address")
+        return _api_err("relink_fields_missing", f"Auto-ReLink nicht möglich; fehlende Felder: {', '.join(missing)}.", 400)
 
     payload = {"uuid": uuid_value, "slug": slug_value, "clientId": client_id, "macAddress": mac_address}
     ok_relink, relink_status_code, relink_data, relink_err = _http_post_json(
