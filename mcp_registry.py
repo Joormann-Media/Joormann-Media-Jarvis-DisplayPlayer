@@ -230,10 +230,15 @@ def generate_light_action_candidates(endpoints: list[dict[str, Any]], existing_a
 
     for item in [
         ("displayplayer.status", "displayplayer.status", "Display Status", "Display-Status lesen.", "GET", "/api/display/status", "readonly", True, "low", "status", "display.status"),
+        ("displayplayer.dashboard.overview", "displayplayer.dashboard.overview", "Dashboard Overview", "Gesamten DisplayPlayer IST-Überblick lesen.", "GET", "/api/dashboard/overview", "readonly", True, "low", "status", "display.overview"),
         ("displayplayer.video.status", "displayplayer.video.status", "Video Status", "Video-Playback-Status lesen.", "GET", "/api/video/status", "readonly", True, "low", "status", "video.status"),
         ("displayplayer.deviceplayer.health", "displayplayer.deviceplayer.health", "Deviceplayer Health", "Deviceplayer-Health lesen.", "GET", "/api/display/deviceplayer/health", "readonly", True, "low", "status", "display.health"),
+        ("displayplayer.display.config.get", "displayplayer.display.config.get", "Display Config", "Display-Konfiguration lesen.", "GET", "/api/display/config", "readonly", True, "low", "read_config", "display.config"),
+        ("displayplayer.stream.config.get", "displayplayer.stream.config.get", "Stream Config", "Aktuelle Stream-Konfiguration lesen.", "GET", "/api/stream/config", "readonly", True, "low", "read_config", "stream.config"),
         ("displayplayer.video.files", "displayplayer.video.files", "Video Files", "Video-Dateien auflisten.", "GET", "/api/video/files", "readonly", True, "low", "list_files", "media.files"),
+        ("displayplayer.media.folders", "displayplayer.media.folders", "Media Folders", "Aktive Media-Ordner und Status lesen.", "GET", "/api/media/folders", "readonly", True, "low", "list_folders", "media.folders"),
         ("displayplayer.player.status", "displayplayer.player.status", "Player Service Status", "Player-Service-Status lesen.", "GET", "/api/player/status", "readonly", True, "low", "status", "player.status"),
+        ("displayplayer.player.setup", "displayplayer.player.setup", "Player Setup", "Player-Setup lesen.", "GET", "/api/player/setup", "readonly", True, "low", "read_setup", "player.setup"),
     ]:
         a = _base_action_template()
         a.update({

@@ -2160,10 +2160,10 @@ def api_mcp_export():
 
 
 def _build_mcp_intents_payload() -> list[dict[str, Any]]:
-    actions = mcp_registry.load_mcp_actions()
-    exported = mcp_registry.export_enabled_mcp_tools(actions)
+    actions = _apply_permission_keys(mcp_registry.load_mcp_actions())
+    mcp_registry.save_mcp_actions(actions)
     out: list[dict[str, Any]] = []
-    for action in exported.get("actions") or []:
+    for action in actions:
         if not isinstance(action, dict):
             continue
         action_key = str(action.get("tool_name") or action.get("id") or "").strip().lower()
@@ -2185,6 +2185,7 @@ def _build_mcp_intents_payload() -> list[dict[str, Any]]:
                 "requiredParams": action.get("required_params") if isinstance(action.get("required_params"), list) else [],
                 "optionalParams": action.get("optional_params") if isinstance(action.get("optional_params"), list) else [],
                 "source": "mcp",
+                "isActive": bool(action.get("enabled", False)),
             }
         )
     return out
