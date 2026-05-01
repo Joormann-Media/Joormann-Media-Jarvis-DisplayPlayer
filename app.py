@@ -33,6 +33,14 @@ PLAYER_SETUP_CONFIG_PATH = RUNTIME_CONFIG_DIR / "player-service.json"
 PORTAL_CONFIG_PATH = RUNTIME_CONFIG_DIR / "portal-link.json"
 DISPLAY_CONFIG_PATH = RUNTIME_CONFIG_DIR / "display-config.json"
 MEDIA_REGISTRY_CONFIG_PATH = RUNTIME_CONFIG_DIR / "media-registry.json"
+DEVICE_PORTAL_MACHINE_ID_PATHS = (
+    Path("/home/djanebmb/projects/Joormann-Media-Deviceportal/var/data/device.json"),
+    Path("/opt/joormann-media-deviceportal/var/data/device.json"),
+)
+LINUX_MACHINE_ID_PATHS = (
+    Path("/etc/machine-id"),
+    Path("/var/lib/dbus/machine-id"),
+)
 
 DEVICEPLAYER_CONTROL_URL = os.getenv("DEVICEPLAYER_CONTROL_API_HOST", "http://127.0.0.1:5081")
 
@@ -248,6 +256,39 @@ def _portal_defaults() -> dict[str, Any]:
     }
 
 
+def _resolve_machine_id() -> str:
+    env_machine_id = str(os.getenv("PORTAL_MACHINE_ID") or os.getenv("JARVIS_MACHINE_ID") or "").strip()
+    if env_machine_id:
+        return env_machine_id
+
+    override_device_json = str(os.getenv("DEVICE_PORTAL_DEVICE_JSON") or "").strip()
+    device_paths = [Path(override_device_json)] if override_device_json else []
+    device_paths.extend(DEVICE_PORTAL_MACHINE_ID_PATHS)
+    for device_path in device_paths:
+        try:
+            if not device_path.exists():
+                continue
+            raw = json.loads(device_path.read_text(encoding="utf-8"))
+            if not isinstance(raw, dict):
+                continue
+            candidate = str(raw.get("machine_id") or "").strip()
+            if candidate:
+                return candidate
+        except Exception:
+            continue
+
+    for machine_id_path in LINUX_MACHINE_ID_PATHS:
+        try:
+            if not machine_id_path.exists():
+                continue
+            candidate = machine_id_path.read_text(encoding="utf-8").strip()
+            if candidate:
+                return candidate
+        except Exception:
+            continue
+    return ""
+
+
 def _load_portal_config() -> dict[str, Any]:
     cfg = _portal_defaults()
     if not PORTAL_CONFIG_PATH.exists():
@@ -266,7 +307,7 @@ def _load_portal_config() -> dict[str, Any]:
     cfg["api_key"] = str(cfg.get("api_key") or "").strip()
     cfg["node_uuid"] = str(cfg.get("node_uuid") or "").strip()
     cfg["node_slug"] = str(cfg.get("node_slug") or "").strip()
-    cfg["machine_id"] = str(cfg.get("machine_id") or "").strip()
+    cfg["machine_id"] = _resolve_machine_id() or str(cfg.get("machine_id") or "").strip()
     cfg["node_name"] = str(cfg.get("node_name") or "").strip()
     try:
         cfg["heartbeat_interval"] = max(10, int(cfg.get("heartbeat_interval") or 60))
@@ -286,7 +327,7 @@ def _save_portal_config(data: dict[str, Any]) -> dict[str, Any]:
     cfg["api_key"] = str(cfg.get("api_key") or "").strip()
     cfg["node_uuid"] = str(cfg.get("node_uuid") or "").strip()
     cfg["node_slug"] = str(cfg.get("node_slug") or "").strip()
-    cfg["machine_id"] = str(cfg.get("machine_id") or "").strip()
+    cfg["machine_id"] = _resolve_machine_id() or str(cfg.get("machine_id") or "").strip()
     cfg["node_name"] = str(cfg.get("node_name") or "").strip()
     try:
         cfg["heartbeat_interval"] = max(10, int(cfg.get("heartbeat_interval") or 60))
@@ -852,7 +893,7 @@ def _portal_register_internal(
     cfg = _load_portal_config()
     portal_url = str(portal_url or cfg.get("url") or "").strip()
     registration_token = str(registration_token or "").strip()
-    machine_id = str(machine_id or cfg.get("machine_id") or "").strip()
+    machine_id = _resolve_machine_id() or str(machine_id or cfg.get("machine_id") or "").strip()
     node_name = str(node_name or cfg.get("node_name") or "").strip()
 
     if not portal_url:
@@ -1186,7 +1227,7 @@ def link_portal():
         action = str(request.form.get("action") or "").strip().lower()
         form["portal_url"] = str(request.form.get("portal_url") or "").strip()
         form["registration_token"] = str(request.form.get("registration_token") or "").strip()
-        form["machine_id"] = str(request.form.get("machine_id") or "").strip()
+        form["machine_id"] = _resolve_machine_id() or str(request.form.get("machine_id") or "").strip()
         form["node_name"] = str(request.form.get("node_name") or "").strip()
 
         if action == "reset_registration":
@@ -1204,8 +1245,6 @@ def link_portal():
             result = {"ok": True, "reset": True}
         elif not form["portal_url"]:
             error = "Portal-URL fehlt."
-        elif not form["machine_id"]:
-            error = "Machine ID fehlt."
         else:
             already_registered = bool(cfg.get("client_id") and cfg.get("api_key"))
             if not already_registered and form["registration_token"]:
