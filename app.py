@@ -712,6 +712,7 @@ video_manager = VideoManager()
 media_registry = MediaFolderRegistry(MEDIA_REGISTRY_CONFIG_PATH)
 media_scanner = MediaScanner(file_limit=5000)
 media_sync_service = MediaSyncService(post_json=_http_post_json)
+MEDIA_CATEGORY_CHOICES = ("mixed", "movie", "tv_show", "series", "clips", "pictures")
 
 
 # ---------------------------------------------------------------------------
@@ -1223,7 +1224,12 @@ def index():
 @app.get("/media")
 def media():
     folders = media_registry.list_folders()
-    return render_template("media.html", folders=folders, media_status=_media_status_payload())
+    return render_template(
+        "media.html",
+        folders=folders,
+        media_status=_media_status_payload(),
+        media_category_choices=MEDIA_CATEGORY_CHOICES,
+    )
 
 
 @app.route("/link", methods=["GET", "POST"])
@@ -1712,8 +1718,9 @@ def api_media_folders_add():
     body = request.get_json(silent=True) or {}
     path = str(body.get("path") or "").strip()
     label = str(body.get("label") or "").strip()
+    media_category = str(body.get("media_category") or "mixed").strip()
     try:
-        folder = media_registry.add_folder(path, label)
+        folder = media_registry.add_folder(path, label, media_category=media_category)
     except MediaFolderValidationError as exc:
         return make_response(False, str(exc), {}, error_code="validation_error", status=400)
     except Exception as exc:
@@ -1757,6 +1764,18 @@ def api_media_folder_active(folder_id: str):
     if not updated:
         return make_response(False, "Ordner nicht gefunden.", {}, error_code="not_found", status=404)
     return make_response(True, f"Ordner ist jetzt {'aktiv' if active else 'inaktiv'}.", {"folder": updated})
+
+
+@app.post("/api/media/folders/<folder_id>/category")
+def api_media_folder_category(folder_id: str):
+    body = request.get_json(silent=True) or {}
+    media_category = str(body.get("media_category") or "").strip()
+    updated = media_registry.update_folder(folder_id, {"media_category": media_category})
+    if not updated:
+        return make_response(False, "Ordner nicht gefunden.", {}, error_code="not_found", status=404)
+    _scan_and_sync_folder(folder_id)
+    folder = media_registry.get_folder(folder_id)
+    return make_response(True, "Kategorie aktualisiert und neu synchronisiert.", {"folder": folder})
 
 
 @app.get("/api/media/browse")
