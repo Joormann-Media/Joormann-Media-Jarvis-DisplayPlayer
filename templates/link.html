@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DisplayPlayer Link</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #f5f7fb; color: #0f172a; }
+    .wrap { max-width: 820px; margin: 0 auto; padding: 18px; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+    h1, h3 { margin: 0 0 8px; }
+    .muted { color: #64748b; font-size: 13px; }
+    .ok { color: #166534; }
+    .err { color: #b91c1c; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+    label { display: block; font-size: 12px; color: #475569; margin-bottom: 4px; }
+    input { width: 100%; box-sizing: border-box; padding: 9px 10px; border-radius: 8px; border: 1px solid #cbd5e1; }
+    button { width: 100%; box-sizing: border-box; padding: 9px 10px; border-radius: 8px; border: 1px solid #0ea5e9; background: #0ea5e9; color: #fff; font-weight: 600; cursor: pointer; }
+    .kv { font-size: 13px; margin: 3px 0; }
+    .btn-danger { border-color: #dc2626; background: #dc2626; }
+  </style>
+</head>
+<body>
+{% set active_page = "relink" if request.path == "/relink" else "link" %}
+{% include "_nav.html" %}
+<div class="wrap">
+
+  <div class="card">
+    <h1>DisplayPlayer mit Family Portal verbinden</h1>
+    <div class="muted">Domain und Machine ID eintragen. Registrierungstoken nur für die Erstregistrierung; danach kannst du den Node-Namen hier jederzeit ändern und neu synchronisieren.</div>
+  </div>
+
+  {% if error %}
+    <div class="card err">{{ error }}</div>
+  {% endif %}
+  {% if result and result.reset %}
+    <div class="card ok">Registrierung zurückgesetzt. Bitte neuen Registrierungstoken eintragen und erneut speichern.</div>
+  {% elif result and result.updated %}
+    <div class="card ok">Konfiguration gespeichert. Node-Name wurde mit dem Portal synchronisiert.</div>
+  {% elif result %}
+    <div class="card ok">Verknüpfung erfolgreich. Node wurde registriert und synchronisiert.</div>
+  {% endif %}
+
+  <div class="card">
+    <h3>Link-Konfiguration</h3>
+    <form method="post">
+      <div class="grid">
+        <div style="grid-column:1/-1;">
+          <label>Portal-URL</label>
+          <input name="portal_url" value="{{ form.portal_url }}" placeholder="https://joormann-family.de" required>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label>Registrierungstoken</label>
+          <input name="registration_token" value="{{ form.registration_token }}" placeholder="Einmal-Token aus /admin/jarvis/nodes/tokens (nur Erstregistrierung)">
+        </div>
+        <div>
+          <label>Machine ID</label>
+          <input name="machine_id" value="{{ form.machine_id }}" placeholder="d4bb08ae2e22466a91777133cb65c8c5" required>
+        </div>
+        <div>
+          <label>Node-Name (optional)</label>
+          <input name="node_name" value="{{ form.node_name }}" placeholder="JarvisDisplayNodeWohnzimmer">
+        </div>
+      </div>
+      <div style="margin-top:10px;"><button type="submit">Speichern / registrieren</button></div>
+    </form>
+    <form method="post" style="margin-top:10px;" onsubmit="return confirm('Vorhandene Portal-Registrierung wirklich zurücksetzen? Danach ist ein neuer Token erforderlich.');">
+      <input type="hidden" name="action" value="reset_registration">
+      <input type="hidden" name="portal_url" value="{{ form.portal_url }}">
+      <input type="hidden" name="machine_id" value="{{ form.machine_id }}">
+      <input type="hidden" name="node_name" value="{{ form.node_name }}">
+      <button type="submit" class="btn-danger">Registrierung zurücksetzen</button>
+    </form>
+  </div>
+
+  <div class="card" id="relink-card">
+    <h3>Re-Link (ohne neuen Registrierungstoken)</h3>
+    <div class="muted">Nutzt die bestehenden Node-Merkmale (UUID, Slug, Client ID, MAC), rotiert den API-Key und stößt direkt den Voll-Sync an.</div>
+    <form id="relinkForm" style="margin-top:10px;">
+      <div class="grid">
+        <div style="grid-column:1/-1;">
+          <label>Portal-URL</label>
+          <input name="portal_url" value="{{ portal_status.portal_url or form.portal_url }}" required>
+        </div>
+        <div>
+          <label>UUID</label>
+          <input name="uuid" value="{{ portal_status.node_uuid or '' }}">
+        </div>
+        <div>
+          <label>Slug</label>
+          <input name="slug" value="{{ portal_status.node_slug or '' }}">
+        </div>
+        <div>
+          <label>Client ID</label>
+          <input name="client_id" value="{{ portal_status.client_id or '' }}">
+        </div>
+        <div>
+          <label>MAC-Adresse</label>
+          <input name="mac_address" value="{{ portal_status.mac_address or '' }}">
+        </div>
+      </div>
+      <div style="margin-top:10px;"><button type="submit">Re-Link ausführen</button></div>
+    </form>
+    <pre id="relinkOut" style="white-space:pre-wrap; margin-top:10px;"></pre>
+  </div>
+
+  <div class="card">
+    <h3>Aktueller Portal-Status</h3>
+    <div class="kv"><strong>Registriert:</strong> {{ portal_status.registered and 'ja' or 'nein' }}</div>
+    <div class="kv"><strong>Portal-URL:</strong> {{ portal_status.portal_url or '—' }}</div>
+    <div class="kv"><strong>Node UUID:</strong> {{ portal_status.node_uuid or '—' }}</div>
+    <div class="kv"><strong>Node Slug:</strong> {{ portal_status.node_slug or '—' }}</div>
+    <div class="kv"><strong>Node-Name:</strong> {{ portal_status.node_name or '—' }}</div>
+    <div class="kv"><strong>Machine ID:</strong> {{ portal_status.machine_id or '—' }}</div>
+  </div>
+</div>
+<script>
+(() => {
+  const form = document.getElementById("relinkForm");
+  const out = document.getElementById("relinkOut");
+  if (!form || !out) return;
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const fd = new FormData(form);
+    const payload = {
+      portal_url: String(fd.get("portal_url") || "").trim(),
+      uuid: String(fd.get("uuid") || "").trim(),
+      slug: String(fd.get("slug") || "").trim(),
+      client_id: String(fd.get("client_id") || "").trim(),
+      mac_address: String(fd.get("mac_address") || "").trim(),
+    };
+    out.textContent = "Re-Link läuft...";
+    try {
+      const res = await fetch("/api/portal/relink", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      out.textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+      out.textContent = "Fehler: " + String(err);
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1324,8 +1324,10 @@ def link_portal():
     return render_template("link.html", form=form, result=result, error=error, portal_status=portal_status)
 
 
-@app.get("/relink")
+@app.route("/relink", methods=["GET", "POST"])
 def relink_portal():
+    if request.method == "POST":
+        return link_portal()
     cfg = _load_portal_config()
     form = {
         "portal_url": str(cfg.get("url") or "").strip(),
