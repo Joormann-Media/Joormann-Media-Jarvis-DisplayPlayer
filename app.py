@@ -37,6 +37,10 @@ DEVICE_PORTAL_MACHINE_ID_PATHS = (
     Path("/home/djanebmb/projects/Joormann-Media-Deviceportal/var/data/device.json"),
     Path("/opt/joormann-media-deviceportal/var/data/device.json"),
 )
+DEVICE_PORTAL_CONFIG_PATHS = (
+    Path("/home/djanebmb/projects/Joormann-Media-Deviceportal/var/data/config.json"),
+    Path("/opt/joormann-media-deviceportal/var/data/config.json"),
+)
 LINUX_MACHINE_ID_PATHS = (
     Path("/etc/machine-id"),
     Path("/var/lib/dbus/machine-id"),
@@ -289,6 +293,34 @@ def _resolve_machine_id() -> str:
     return ""
 
 
+def _resolve_portal_url() -> str:
+    env_portal_url = str(os.getenv("PORTAL_URL") or os.getenv("JARVIS_PORTAL_URL") or "").strip()
+    if env_portal_url:
+        return env_portal_url.rstrip("/")
+
+    override_device_json = str(os.getenv("DEVICE_PORTAL_CONFIG_JSON") or "").strip()
+    config_paths = [Path(override_device_json)] if override_device_json else []
+    config_paths.extend(DEVICE_PORTAL_CONFIG_PATHS)
+    for config_path in config_paths:
+        try:
+            if not config_path.exists():
+                continue
+            raw = json.loads(config_path.read_text(encoding="utf-8"))
+            if not isinstance(raw, dict):
+                continue
+            candidate = str(
+                raw.get("admin_base_url")
+                or raw.get("portal_url")
+                or raw.get("base_url")
+                or ""
+            ).strip()
+            if candidate:
+                return candidate.rstrip("/")
+        except Exception:
+            continue
+    return ""
+
+
 def _load_portal_config() -> dict[str, Any]:
     cfg = _portal_defaults()
     if not PORTAL_CONFIG_PATH.exists():
@@ -302,7 +334,7 @@ def _load_portal_config() -> dict[str, Any]:
     for key in cfg.keys():
         if key in data:
             cfg[key] = data[key]
-    cfg["url"] = str(cfg.get("url") or "").strip()
+    cfg["url"] = _resolve_portal_url() or str(cfg.get("url") or "").strip()
     cfg["client_id"] = str(cfg.get("client_id") or "").strip()
     cfg["api_key"] = str(cfg.get("api_key") or "").strip()
     cfg["node_uuid"] = str(cfg.get("node_uuid") or "").strip()
@@ -322,7 +354,7 @@ def _save_portal_config(data: dict[str, Any]) -> dict[str, Any]:
         for key in cfg.keys():
             if key in data:
                 cfg[key] = data[key]
-    cfg["url"] = str(cfg.get("url") or "").strip()
+    cfg["url"] = _resolve_portal_url() or str(cfg.get("url") or "").strip()
     cfg["client_id"] = str(cfg.get("client_id") or "").strip()
     cfg["api_key"] = str(cfg.get("api_key") or "").strip()
     cfg["node_uuid"] = str(cfg.get("node_uuid") or "").strip()
@@ -891,7 +923,7 @@ def _portal_register_internal(
     node_name: str = "",
 ) -> tuple[bool, int, dict[str, Any]]:
     cfg = _load_portal_config()
-    portal_url = str(portal_url or cfg.get("url") or "").strip()
+    portal_url = _resolve_portal_url() or str(portal_url or cfg.get("url") or "").strip()
     registration_token = str(registration_token or "").strip()
     machine_id = _resolve_machine_id() or str(machine_id or cfg.get("machine_id") or "").strip()
     node_name = str(node_name or cfg.get("node_name") or "").strip()
@@ -1225,7 +1257,7 @@ def link_portal():
 
     if request.method == "POST":
         action = str(request.form.get("action") or "").strip().lower()
-        form["portal_url"] = str(request.form.get("portal_url") or "").strip()
+        form["portal_url"] = _resolve_portal_url() or str(request.form.get("portal_url") or "").strip()
         form["registration_token"] = str(request.form.get("registration_token") or "").strip()
         form["machine_id"] = _resolve_machine_id() or str(request.form.get("machine_id") or "").strip()
         form["node_name"] = str(request.form.get("node_name") or "").strip()
