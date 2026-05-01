@@ -7,7 +7,6 @@ import time
 from pathlib import Path
 from typing import Any
 
-
 REPO_ROOT = Path(__file__).resolve().parent
 CONFIG_DIR = REPO_ROOT / "config"
 MCP_ENDPOINTS_PATH = CONFIG_DIR / "mcp_endpoints.local.json"
@@ -15,35 +14,19 @@ MCP_ACTIONS_PATH = CONFIG_DIR / "mcp_actions.local.json"
 
 
 def mask_sensitive_data(data: Any) -> Any:
-    patterns = (
-        "api_key",
-        "apikey",
-        "token",
-        "secret",
-        "password",
-        "client_secret",
-        "access_key",
-        "accesskey",
-        "local_key",
-        "app_key",
-    )
+    patterns = ("api_key", "apikey", "token", "secret", "password", "client_secret", "access_key", "local_key")
 
-    def _mask_key(key: str) -> bool:
-        k = (key or "").strip().lower()
+    def _is_sensitive(key: str) -> bool:
+        k = str(key or "").lower()
         return any(p in k for p in patterns)
 
     def _walk(value: Any) -> Any:
         if isinstance(value, dict):
             out: dict[str, Any] = {}
             for k, v in value.items():
-                if isinstance(k, str) and _mask_key(k):
-                    out[k] = "***"
-                else:
-                    out[k] = _walk(v)
+                out[k] = "***" if isinstance(k, str) and _is_sensitive(k) else _walk(v)
             return out
         if isinstance(value, list):
-            return [_walk(v) for v in value]
-        if isinstance(value, tuple):
             return [_walk(v) for v in value]
         return value
 
@@ -54,8 +37,7 @@ def _read_json(path: Path, default: Any) -> Any:
     if not path.exists():
         return default
     try:
-        raw = path.read_text(encoding="utf-8")
-        return json.loads(raw)
+        return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return default
 
@@ -66,121 +48,72 @@ def _write_json(path: Path, data: Any) -> None:
 
 
 def _stable_endpoint_id(path: str, methods: list[str], endpoint: str) -> str:
-    payload = f"{path}|{','.join(methods)}|{endpoint}"
-    digest = hashlib.sha1(payload.encode("utf-8")).hexdigest()[:12]
+    digest = hashlib.sha1(f"{path}|{','.join(methods)}|{endpoint}".encode("utf-8")).hexdigest()[:12]
     return f"ep_{digest}"
 
 
 def _flask_rule_to_path_template(path: str) -> str:
-    # Flask rules look like: /api/hue/light/<light_id>/on or /x/<int:device_id>
-    # Convert to a braces-based template while keeping param names consistent.
     def repl(match: re.Match[str]) -> str:
-        inner = match.group(1) or ""
-        name = inner.split(":", 1)[-1].strip()
-        return "{" + (name or "param") + "}"
+        name = (match.group(1) or "").split(":", 1)[-1].strip() or "param"
+        return "{" + name + "}"
 
     return re.sub(r"<([^>]+)>", repl, str(path or ""))
 
 
-def _guess_category_provider(path: str) -> tuple[str, str | None]:
-    p = (path or "").strip()
-    if p.startswith("/api/hue/"):
-        return "hue", "hue"
-    if p.startswith("/api/avm/"):
-        return "avm", "avm"
-    if p.startswith("/api/tuya/"):
-        return "tuya", "tuya"
-    if p.startswith("/api/tapo/"):
-        return "tapo", "tapo"
-    if p.startswith("/api/lights"):
-        return "aggregation", None
-    if p.startswith("/api/credentials") or p.startswith("/api/config"):
-        return "credentials", None
+def _guess_category(path: str) -> str:
+    p = str(path or "")
+    if p.startswith("/api/display"):
+        return "display"
+    if p.startswith("/api/video"):
+        return "video"
+    if p.startswith("/api/player"):
+        return "player"
+    if p.startswith("/api/stream"):
+        return "stream"
+    if p.startswith("/api/media"):
+        return "media"
     if p.startswith("/api/portal"):
-        return "portal", None
-    if p.startswith("/api/update"):
-        return "system", None
-    if p.startswith("/api/"):
-        return "system", None
-    if p in {"/health", "/info"}:
-        return "system", None
-    if p.startswith("/static/"):
-        return "system", None
-    return "unknown", None
-
-
-def _guess_kind(path: str) -> str:
-    p = (path or "").lower()
-    if "/credentials" in p or p.startswith("/api/config"):
-        return "config"
-    if "/portal" in p or "/relink" in p or p.endswith("/link"):
         return "portal"
-    if "/update" in p:
+    if p.startswith("/api/update"):
         return "system"
-    if "/manifest" in p or p.endswith("/status") or p.endswith("/health"):
-        return "status"
-    if "/camera" in p:
-        return "camera"
-    if "/plug" in p:
-        return "switch"
-    if "/light" in p or "/lights" in p:
-        return "light"
-    if "/device" in p:
-        return "unknown"
+    if p.startswith("/api/mcp"):
+        return "mcp"
+    if p.startswith("/api/"):
+        return "system"
     return "unknown"
 
 
 def _guess_operation(path: str, methods: list[str]) -> str:
-    p = (path or "").lower()
-    m = set(methods)
-    if "GET" in m:
-        if p.endswith("/status") or p in {"/api/status", "/health", "/api/manifest"}:
+    p = str(path or "").lower()
+    if "GET" in methods:
+        if p.endswith("/status") or p in {"/api/health", "/health"}:
             return "status"
-        if p.endswith("/manifest"):
-            return "status"
-        if p.endswith("/devices") or p.endswith("/lights") or p.endswith("/lights/all") or p.endswith("/api/lights"):
+        if p.endswith("/files") or p.endswith("/folders") or p.endswith("/browse"):
             return "list"
-        if "/light/" in p or "/device/" in p:
-            return "get_state"
-        return "unknown"
-    if any(x in m for x in {"POST", "PUT", "DELETE", "PATCH"}):
-        if p.endswith("/on"):
-            return "on"
-        if p.endswith("/off"):
-            return "off"
-        if p.endswith("/brightness"):
-            return "brightness"
-        if p.endswith("/color"):
-            return "color"
-        if p.endswith("/colortemp"):
-            return "colortemp"
-        if p.endswith("/state") or p.endswith("/bulk/state"):
-            return "state" if p.endswith("/state") else "bulk_state"
-        if "/sync" in p or "/fetch" in p:
+        return "read"
+    if any(m in methods for m in ["POST", "PUT", "PATCH", "DELETE"]):
+        if p.endswith("/sync"):
             return "sync"
-        if p.endswith("/config"):
-            return "config"
-        return "unknown"
+        if p.endswith("/play"):
+            return "play"
+        if p.endswith("/stop"):
+            return "stop"
+        if "/set" in p or p.endswith("/save"):
+            return "set"
+        return "write"
     return "unknown"
 
 
 def _risk_level(path: str, methods: list[str], category: str) -> str:
-    p = (path or "").lower()
-    m = set(methods)
-    if category in {"credentials"}:
+    p = str(path or "").lower()
+    if category in {"portal"}:
         return "dangerous"
-    if "/api/update/apply" in p:
+    if p.startswith("/api/update"):
         return "dangerous"
-    if "/api/portal/" in p:
+    if "/debug/" in p:
         return "dangerous"
-    if "/api/tapo/debug/" in p:
-        return "dangerous"
-    if any(x in m for x in {"POST", "PUT", "DELETE", "PATCH"}):
-        if "/bulk/" in p:
-            return "high"
-        if "/tuya/" in p or "/hue/" in p or "/avm/" in p or "/tapo/" in p or "/api/lights/" in p:
-            return "high"
-        return "medium"
+    if any(m in methods for m in ["POST", "PUT", "PATCH", "DELETE"]):
+        return "high"
     return "low"
 
 
@@ -189,63 +122,45 @@ def classify_endpoint(rule: Any) -> dict[str, Any]:
     endpoint_name = str(getattr(rule, "endpoint", "") or "")
     raw_methods = getattr(rule, "methods", None)
     methods = sorted([m for m in (raw_methods or []) if m and m not in {"HEAD", "OPTIONS"}])
-    path_template = _flask_rule_to_path_template(path)
-
-    category, provider = _guess_category_provider(path)
-    kind = _guess_kind(path)
+    category = _guess_category(path)
     operation = _guess_operation(path, methods)
     risk_level = _risk_level(path, methods, category)
-
-    is_action = any(m in {"POST", "PUT", "DELETE", "PATCH"} for m in methods)
-    if operation in {"list", "get_state", "status"}:
-        is_action = False
-
-    mcp_candidate = False
-    if risk_level != "dangerous":
-        if operation in {"list", "get_state", "status"}:
-            mcp_candidate = True
-        elif kind in {"light", "switch"} and is_action:
-            mcp_candidate = True
-
-    ignored = False
-    if endpoint_name == "static" or path.startswith("/static/"):
-        ignored = True
-        mcp_candidate = False
-
+    is_action = any(m in {"POST", "PUT", "PATCH", "DELETE"} for m in methods)
+    ignored = endpoint_name == "static" or path.startswith("/static/")
     return {
         "id": _stable_endpoint_id(path, methods, endpoint_name),
         "path": path,
-        "path_template": path_template,
+        "path_template": _flask_rule_to_path_template(path),
         "methods": methods,
         "endpoint": endpoint_name,
         "category": category,
-        "provider": provider,
-        "kind": kind,
+        "provider": "display",
+        "kind": category,
         "operation": operation,
         "risk_level": risk_level,
-        "is_action": bool(is_action),
-        "mcp_candidate": bool(mcp_candidate),
-        "ignored": bool(ignored),
+        "is_action": is_action,
+        "mcp_candidate": (not ignored and risk_level != "dangerous"),
+        "ignored": ignored,
         "notes": "",
     }
 
 
 def discover_flask_endpoints(app: Any) -> list[dict[str, Any]]:
-    endpoints: list[dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
     seen: set[str] = set()
     for rule in getattr(app, "url_map", []).iter_rules():
         item = classify_endpoint(rule)
         if item["id"] in seen:
             continue
         seen.add(item["id"])
-        endpoints.append(item)
-    endpoints.sort(key=lambda x: (str(x.get("path") or ""), ",".join(x.get("methods") or [])))
-    return endpoints
+        rows.append(item)
+    rows.sort(key=lambda x: (str(x.get("path") or ""), ",".join(x.get("methods") or [])))
+    return rows
 
 
 def load_mcp_endpoints() -> list[dict[str, Any]]:
-    data = _read_json(MCP_ENDPOINTS_PATH, default={"endpoints": [], "generated_at": None})
-    items = data.get("endpoints") if isinstance(data, dict) else []
+    payload = _read_json(MCP_ENDPOINTS_PATH, {"endpoints": []})
+    items = payload.get("endpoints") if isinstance(payload, dict) else []
     return items if isinstance(items, list) else []
 
 
@@ -254,8 +169,8 @@ def save_mcp_endpoints(endpoints: list[dict[str, Any]]) -> None:
 
 
 def load_mcp_actions() -> list[dict[str, Any]]:
-    data = _read_json(MCP_ACTIONS_PATH, default={"actions": [], "generated_at": None})
-    items = data.get("actions") if isinstance(data, dict) else []
+    payload = _read_json(MCP_ACTIONS_PATH, {"actions": []})
+    items = payload.get("actions") if isinstance(payload, dict) else []
     return items if isinstance(items, list) else []
 
 
@@ -271,7 +186,7 @@ def _base_action_template() -> dict[str, Any]:
         "description": "",
         "enabled": False,
         "phase": "candidate",
-        "provider": "aggregation",
+        "provider": "display",
         "capability": "",
         "operation": "",
         "http_method": "GET",
@@ -280,7 +195,7 @@ def _base_action_template() -> dict[str, Any]:
         "required_params": [],
         "optional_params": [],
         "input_schema": {},
-        "permission": "SMART_HOME_CONTROL",
+        "permission": "DISPLAY_CONTROL",
         "required_role": "ROLE_ADMIN",
         "requires_confirmation": True,
         "dry_run_supported": True,
@@ -294,479 +209,69 @@ def _merge_existing_action(existing: dict[str, Any] | None, generated: dict[str,
     if not isinstance(existing, dict):
         return generated
     out = dict(generated)
-    preserve_fields = {
-        "enabled",
-        "phase",
-        "display_name",
-        "description",
-        "permission",
-        "required_role",
-        "requires_confirmation",
-        "dry_run_supported",
-        "audit_enabled",
-        "notes",
-        "input_schema",
-        "required_params",
-        "optional_params",
-    }
-    for key in preserve_fields:
+    for key in {
+        "enabled", "phase", "display_name", "description", "permission", "required_role",
+        "requires_confirmation", "dry_run_supported", "audit_enabled", "notes", "input_schema",
+        "required_params", "optional_params",
+    }:
         if key in existing:
             out[key] = existing[key]
     return out
 
 
-def generate_light_action_candidates(
-    endpoints: list[dict[str, Any]],
-    existing_actions: list[dict[str, Any]] | None = None,
-) -> list[dict[str, Any]]:
-    existing_by_id: dict[str, dict[str, Any]] = {}
-    for a in (existing_actions or []):
-        if isinstance(a, dict) and str(a.get("id") or "").strip():
-            existing_by_id[str(a["id"])] = a
+def generate_light_action_candidates(endpoints: list[dict[str, Any]], existing_actions: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    existing_by_id = {str(a.get("id")): a for a in (existing_actions or []) if isinstance(a, dict) and a.get("id")}
+    by_path = {str(e.get("path")): str(e.get("id")) for e in endpoints if isinstance(e, dict)}
 
-    endpoints_by_id: dict[str, dict[str, Any]] = {str(e.get("id")): e for e in endpoints if isinstance(e, dict) and e.get("id")}
+    def sid(path: str) -> list[str]:
+        return [by_path[path]] if path in by_path else []
 
-    def _source_ids_for_paths(paths: list[str]) -> list[str]:
-        out: list[str] = []
-        path_set = set(paths)
-        for eid, e in endpoints_by_id.items():
-            if str(e.get("path") or "") in path_set:
-                out.append(eid)
-        return sorted(set(out))
+    defs: list[dict[str, Any]] = []
 
-    generated: list[dict[str, Any]] = []
+    for item in [
+        ("displayplayer.status", "displayplayer.status", "Display Status", "Display-Status lesen.", "GET", "/api/display/status", "readonly", True, "low", "status", "display.status"),
+        ("displayplayer.video.status", "displayplayer.video.status", "Video Status", "Video-Playback-Status lesen.", "GET", "/api/video/status", "readonly", True, "low", "status", "video.status"),
+        ("displayplayer.deviceplayer.health", "displayplayer.deviceplayer.health", "Deviceplayer Health", "Deviceplayer-Health lesen.", "GET", "/api/display/deviceplayer/health", "readonly", True, "low", "status", "display.health"),
+        ("displayplayer.video.files", "displayplayer.video.files", "Video Files", "Video-Dateien auflisten.", "GET", "/api/video/files", "readonly", True, "low", "list_files", "media.files"),
+        ("displayplayer.player.status", "displayplayer.player.status", "Player Service Status", "Player-Service-Status lesen.", "GET", "/api/player/status", "readonly", True, "low", "status", "player.status"),
+    ]:
+        a = _base_action_template()
+        a.update({
+            "id": item[0], "tool_name": item[1], "display_name": item[2], "description": item[3],
+            "http_method": item[4], "endpoint_template": item[5], "phase": item[6], "enabled": item[7],
+            "risk_level": item[8], "operation": item[9], "capability": item[10],
+            "requires_confirmation": False, "dry_run_supported": False, "source_endpoints": sid(item[5]),
+        })
+        defs.append(a)
 
-    # Phase 1: read-only (enabled)
-    readonly_defs: list[dict[str, Any]] = []
-
-    a = _base_action_template()
-    a.update(
-        {
-            "id": "smarthome.list_lights",
-            "tool_name": "smarthome.list_lights",
-            "display_name": "List Lights (Provider)",
-            "description": "Lists lights for a given provider (hue|avm|tuya).",
-            "enabled": True,
-            "phase": "readonly",
-            "provider": "aggregation",
-            "capability": "light.state",
-            "operation": "list_devices",
-            "http_method": "GET",
-            "endpoint_template": "/api/lights?provider={provider}",
-            "required_params": ["provider"],
-            "optional_params": [],
-            "requires_confirmation": False,
-            "dry_run_supported": False,
-            "risk_level": "low",
-            "source_endpoints": _source_ids_for_paths(["/api/lights"]),
-        }
-    )
-    readonly_defs.append(a)
-
-    a = _base_action_template()
-    a.update(
-        {
-            "id": "smarthome.list_all_lights",
-            "tool_name": "smarthome.list_all_lights",
-            "display_name": "List All Lights",
-            "description": "Lists all lights across providers (where supported by the API).",
-            "enabled": True,
-            "phase": "readonly",
-            "provider": "aggregation",
-            "capability": "light.state",
-            "operation": "list_devices",
-            "http_method": "GET",
-            "endpoint_template": "/api/lights/all",
-            "required_params": [],
-            "optional_params": [],
-            "requires_confirmation": False,
-            "dry_run_supported": False,
-            "risk_level": "low",
-            "source_endpoints": _source_ids_for_paths(["/api/lights/all"]),
-        }
-    )
-    readonly_defs.append(a)
-
-    # Provider-specific get_state (enabled)
-    provider_state_map = [
-        ("hue", "/api/hue/light/{device_id}", "light.state"),
-        ("avm", "/api/avm/light/{device_id}", "light.state"),
-        ("tuya", "/api/tuya/device/{device_id}", "light.state"),
-        ("tapo", "/api/tapo/device/{device_id}", "device.state"),
+    cand = [
+        ("displayplayer.video.stream.play", "displayplayer.video.stream.play", "Play Stream", "Video-Stream starten.", "/api/video/stream/play", ["url"], "play_stream", "video.play"),
+        ("displayplayer.video.file.play", "displayplayer.video.file.play", "Play Video File", "Video-Datei starten.", "/api/video/file/play", ["file_path"], "play_file", "video.play"),
+        ("displayplayer.video.stop", "displayplayer.video.stop", "Stop Video", "Video stoppen.", "/api/video/stop", [], "stop", "video.play"),
+        ("displayplayer.stream.sync", "displayplayer.stream.sync", "Sync Stream", "Stream-Lokalsync ausführen.", "/api/stream/sync", [], "sync", "stream.sync"),
     ]
-    for prov, tpl, cap in provider_state_map:
+    for cid, tname, dname, desc, ep, req, op, cap in cand:
         a = _base_action_template()
-        a.update(
-            {
-                "id": f"smarthome.get_light_state.{prov}",
-                "tool_name": "smarthome.get_light_state",
-                "display_name": f"Get Device State ({prov.upper()})",
-                "description": f"Gets device/light state for provider '{prov}'.",
-                "enabled": True,
-                "phase": "readonly",
-                "provider": prov,
-                "capability": cap,
-                "operation": "get_state",
-                "http_method": "GET",
-                "endpoint_template": tpl,
-                "required_params": ["device_id"],
-                "optional_params": [],
-                "requires_confirmation": False,
-                "dry_run_supported": False,
-                "risk_level": "low",
-                "source_endpoints": _source_ids_for_paths([tpl.split("{")[0].rstrip("/") + "<device_id>"]) if "<" in tpl else [],
-            }
-        )
-        # Source endpoint ids: best-effort lookup based on exact paths.
-        # For these provider-specific endpoints, we also try matching the real Flask-style templates.
-        a["source_endpoints"] = _source_ids_for_paths(
-            {
-                "hue": ["/api/hue/light/<light_id>", "/api/hue/device/<light_id>"],
-                "avm": ["/api/avm/light/<ain>"],
-                "tuya": ["/api/tuya/device/<device_id>"],
-                "tapo": ["/api/tapo/device/<device_id>"],
-            }.get(prov, [])
-        )
-        readonly_defs.append(a)
-
-    a = _base_action_template()
-    a.update(
-        {
-            "id": "smarthome.provider_status",
-            "tool_name": "smarthome.provider_status",
-            "display_name": "Provider Status",
-            "description": "Returns overall service status (and indirectly provider readiness via capabilities).",
-            "enabled": True,
-            "phase": "readonly",
-            "provider": "system",
-            "capability": "system.status",
-            "operation": "status",
-            "http_method": "GET",
-            "endpoint_template": "/api/status",
-            "required_params": [],
-            "optional_params": [],
-            "requires_confirmation": False,
-            "dry_run_supported": False,
-            "risk_level": "low",
-            "source_endpoints": _source_ids_for_paths(["/api/status"]),
-        }
-    )
-    readonly_defs.append(a)
-
-    a = _base_action_template()
-    a.update(
-        {
-            "id": "smarthome.capabilities",
-            "tool_name": "smarthome.capabilities",
-            "display_name": "Capabilities / Manifest",
-            "description": "Returns capabilities and the API catalog/manifest.",
-            "enabled": True,
-            "phase": "readonly",
-            "provider": "system",
-            "capability": "system.capabilities",
-            "operation": "status",
-            "http_method": "GET",
-            "endpoint_template": "/api/manifest",
-            "required_params": [],
-            "optional_params": [],
-            "requires_confirmation": False,
-            "dry_run_supported": False,
-            "risk_level": "low",
-            "source_endpoints": _source_ids_for_paths(["/api/manifest"]),
-        }
-    )
-    readonly_defs.append(a)
-
-    for item in readonly_defs:
-        merged = _merge_existing_action(existing_by_id.get(str(item["id"])), item)
-        generated.append(merged)
-
-    # Phase 1: candidates (disabled by default)
-    candidate_defs: list[dict[str, Any]] = []
-
-    a = _base_action_template()
-    a.update(
-        {
-            "id": "smarthome.light.switch",
-            "tool_name": "smarthome.switch",
-            "display_name": "Switch Device On/Off",
-            "description": "Switches a light/switch device on or off (candidate; disabled by default).",
+        a.update({
+            "id": cid,
+            "tool_name": tname,
+            "display_name": dname,
+            "description": desc,
             "enabled": False,
             "phase": "candidate",
-            "provider": "aggregation",
-            "capability": "light.power",
-            "operation": "on_off",
             "http_method": "POST",
-            "endpoint_template": "/api/lights/{provider}/{device_id}/state",
-            "required_params": ["provider", "device_id", "state"],
-            "optional_params": [],
-            "input_schema": {
-                "type": "object",
-                "properties": {"state": {"type": "boolean"}},
-                "required": ["state"],
-            },
-            "requires_confirmation": True,
-            "dry_run_supported": True,
+            "endpoint_template": ep,
+            "required_params": req,
             "risk_level": "high",
-            "source_endpoints": _source_ids_for_paths(["/api/lights/<provider>/<light_id>/state"]),
-        }
-    )
-    candidate_defs.append(a)
+            "operation": op,
+            "capability": cap,
+            "source_endpoints": sid(ep),
+        })
+        defs.append(a)
 
-    a = _base_action_template()
-    a.update(
-        {
-            "id": "smarthome.light.set_brightness",
-            "tool_name": "smarthome.set_brightness",
-            "display_name": "Set Brightness",
-            "description": "Sets brightness (candidate; disabled by default).",
-            "enabled": False,
-            "phase": "candidate",
-            "provider": "aggregation",
-            "capability": "light.brightness",
-            "operation": "set_brightness",
-            "http_method": "POST",
-            "endpoint_template": "/api/lights/{provider}/{device_id}/state",
-            "required_params": ["provider", "device_id", "brightness"],
-            "optional_params": [],
-            "input_schema": {
-                "type": "object",
-                "properties": {"brightness": {"type": "number", "minimum": 0, "maximum": 100}},
-                "required": ["brightness"],
-            },
-            "requires_confirmation": True,
-            "dry_run_supported": True,
-            "risk_level": "high",
-            "source_endpoints": _source_ids_for_paths(["/api/lights/<provider>/<light_id>/state"]),
-        }
-    )
-    candidate_defs.append(a)
-
-    a = _base_action_template()
-    a.update(
-        {
-            "id": "smarthome.light.set_color",
-            "tool_name": "smarthome.set_color",
-            "display_name": "Set Color",
-            "description": "Sets color as hex (#rrggbb) (candidate; disabled by default).",
-            "enabled": False,
-            "phase": "candidate",
-            "provider": "aggregation",
-            "capability": "light.color",
-            "operation": "set_color",
-            "http_method": "POST",
-            "endpoint_template": "/api/lights/{provider}/{device_id}/state",
-            "required_params": ["provider", "device_id", "color"],
-            "optional_params": [],
-            "input_schema": {
-                "type": "object",
-                "properties": {"color": {"type": "string"}},
-                "required": ["color"],
-            },
-            "requires_confirmation": True,
-            "dry_run_supported": True,
-            "risk_level": "high",
-            "source_endpoints": _source_ids_for_paths(["/api/lights/<provider>/<light_id>/state"]),
-        }
-    )
-    candidate_defs.append(a)
-
-    a = _base_action_template()
-    a.update(
-        {
-            "id": "smarthome.light.set_state",
-            "tool_name": "smarthome.set_state",
-            "display_name": "Set Light State (Unified)",
-            "description": "Sets on/off + brightness + color (candidate; disabled by default).",
-            "enabled": False,
-            "phase": "candidate",
-            "provider": "aggregation",
-            "capability": "light.state",
-            "operation": "set_state",
-            "http_method": "POST",
-            "endpoint_template": "/api/lights/{provider}/{device_id}/state",
-            "required_params": ["provider", "device_id"],
-            "optional_params": ["state", "brightness", "color"],
-            "requires_confirmation": True,
-            "dry_run_supported": True,
-            "risk_level": "high",
-            "source_endpoints": _source_ids_for_paths(["/api/lights/<provider>/<light_id>/state"]),
-        }
-    )
-    candidate_defs.append(a)
-
-    # Provider-specific colortemp (candidate; disabled)
-    for prov, tpl in [
-        ("hue", "/api/hue/light/{device_id}/colortemp"),
-        ("avm", "/api/avm/light/{device_id}/colortemp"),
-        ("tuya", "/api/tuya/device/{device_id}/colortemp"),
-    ]:
-        a = _base_action_template()
-        a.update(
-            {
-                "id": f"smarthome.light.set_colortemp.{prov}",
-                "tool_name": "smarthome.set_colortemp",
-                "display_name": f"Set Color Temperature ({prov.upper()})",
-                "description": "Sets color temperature (provider-specific; candidate; disabled by default).",
-                "enabled": False,
-                "phase": "candidate",
-                "provider": prov,
-                "capability": "light.colortemp",
-                "operation": "set_colortemp",
-                "http_method": "PUT",
-                "endpoint_template": tpl,
-                "required_params": ["device_id", "temp"],
-                "optional_params": [],
-                "requires_confirmation": True,
-                "dry_run_supported": True,
-                "risk_level": "high",
-                "source_endpoints": _source_ids_for_paths(
-                    {
-                        "hue": ["/api/hue/light/<light_id>/colortemp"],
-                        "avm": ["/api/avm/light/<ain>/colortemp"],
-                        "tuya": ["/api/tuya/device/<device_id>/colortemp"],
-                    }.get(prov, [])
-                ),
-            }
-        )
-        candidate_defs.append(a)
-
-    # Bulk state (candidate; disabled)
-    for prov, tpl in [
-        ("hue", "/api/hue/lights/bulk/state"),
-        ("tuya", "/api/tuya/devices/bulk/state"),
-    ]:
-        a = _base_action_template()
-        a.update(
-            {
-                "id": f"smarthome.light.bulk_state.{prov}",
-                "tool_name": "smarthome.bulk_state",
-                "display_name": f"Bulk State ({prov.upper()})",
-                "description": "Applies a bulk state update (candidate; disabled by default).",
-                "enabled": False,
-                "phase": "candidate",
-                "provider": prov,
-                "capability": "light.state",
-                "operation": "bulk_state",
-                "http_method": "POST",
-                "endpoint_template": tpl,
-                "required_params": ["payload"],
-                "optional_params": [],
-                "requires_confirmation": True,
-                "dry_run_supported": True,
-                "risk_level": "high",
-                "source_endpoints": _source_ids_for_paths([tpl.replace("{device_id}", "<device_id>")]),
-            }
-        )
-        a["source_endpoints"] = _source_ids_for_paths([tpl.replace("{device_id}", "<device_id>")])
-        candidate_defs.append(a)
-
-    # Cross-provider multi-target orchestration (candidate; disabled)
-    a = _base_action_template()
-    a.update(
-        {
-            "id": "smarthome.actions.execute",
-            "tool_name": "smarthome.actions.execute",
-            "display_name": "Execute Multi-Target Actions",
-            "description": "Executes mixed-provider actions in one request (candidate; disabled by default).",
-            "enabled": False,
-            "phase": "candidate",
-            "provider": "aggregation",
-            "capability": "light.state",
-            "operation": "multi_execute",
-            "http_method": "POST",
-            "endpoint_template": "/api/actions/execute",
-            "required_params": ["targets"],
-            "optional_params": ["parallel", "continue_on_error"],
-            "input_schema": {
-                "type": "object",
-                "properties": {
-                    "targets": {"type": "array"},
-                    "parallel": {"type": "boolean"},
-                    "continue_on_error": {"type": "boolean"},
-                },
-                "required": ["targets"],
-            },
-            "requires_confirmation": True,
-            "dry_run_supported": True,
-            "risk_level": "high",
-            "source_endpoints": _source_ids_for_paths(["/api/actions/execute"]),
-        }
-    )
-    candidate_defs.append(a)
-
-    a = _base_action_template()
-    a.update(
-        {
-            "id": "smarthome.actions.status",
-            "tool_name": "smarthome.actions.status",
-            "display_name": "Read Multi-Target Status",
-            "description": "Reads status for mixed-provider targets in one request (candidate; disabled by default).",
-            "enabled": False,
-            "phase": "candidate",
-            "provider": "aggregation",
-            "capability": "light.state",
-            "operation": "multi_status",
-            "http_method": "POST",
-            "endpoint_template": "/api/actions/status",
-            "required_params": ["targets"],
-            "optional_params": ["parallel"],
-            "input_schema": {
-                "type": "object",
-                "properties": {
-                    "targets": {"type": "array"},
-                    "parallel": {"type": "boolean"},
-                },
-                "required": ["targets"],
-            },
-            "requires_confirmation": True,
-            "dry_run_supported": True,
-            "risk_level": "medium",
-            "source_endpoints": _source_ids_for_paths(["/api/actions/status"]),
-        }
-    )
-    candidate_defs.append(a)
-
-    # Tapo plug on/off (candidate; disabled)
-    for op, path in [
-        ("on", "/api/tapo/device/{device_id}/plug/on"),
-        ("off", "/api/tapo/device/{device_id}/plug/off"),
-    ]:
-        a = _base_action_template()
-        a.update(
-            {
-                "id": f"smarthome.switch.tapo_plug.{op}",
-                "tool_name": "smarthome.switch",
-                "display_name": f"Tapo Plug {op.upper()}",
-                "description": "Switches a Tapo plug locally via python-kasa (candidate; disabled by default).",
-                "enabled": False,
-                "phase": "candidate",
-                "provider": "tapo",
-                "capability": "switch.power",
-                "operation": "on_off",
-                "http_method": "POST",
-                "endpoint_template": path,
-                "required_params": ["device_id"],
-                "optional_params": [],
-                "requires_confirmation": True,
-                "dry_run_supported": True,
-                "risk_level": "high",
-                "source_endpoints": _source_ids_for_paths(
-                    [
-                        "/api/tapo/device/<device_id>/plug/on" if op == "on" else "/api/tapo/device/<device_id>/plug/off"
-                    ]
-                ),
-            }
-        )
-        candidate_defs.append(a)
-
-    for item in candidate_defs:
-        merged = _merge_existing_action(existing_by_id.get(str(item["id"])), item)
-        generated.append(merged)
-
-    # Deterministic order
-    generated.sort(key=lambda x: str(x.get("id") or ""))
-    return generated
+    out = [_merge_existing_action(existing_by_id.get(str(d.get("id"))), d) for d in defs]
+    out.sort(key=lambda x: str(x.get("id") or ""))
+    return out
 
 
 def export_enabled_mcp_tools(actions: list[dict[str, Any]]) -> dict[str, Any]:
@@ -781,9 +286,7 @@ def export_enabled_mcp_tools(actions: list[dict[str, Any]]) -> dict[str, Any]:
         if str(a.get("risk_level") or "").strip().lower() == "dangerous":
             continue
         endpoint_template = str(a.get("endpoint_template") or "").strip()
-        if endpoint_template.startswith("/api/credentials") or endpoint_template.startswith("/api/config") or endpoint_template.startswith("/api/update") or endpoint_template.startswith("/api/portal"):
-            continue
-        if "/debug/" in endpoint_template:
+        if endpoint_template.startswith("/api/portal") or endpoint_template.startswith("/api/update") or "/debug/" in endpoint_template:
             continue
         exported.append(
             {

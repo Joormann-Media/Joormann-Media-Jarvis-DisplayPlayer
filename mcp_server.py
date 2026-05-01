@@ -15,7 +15,7 @@ import mcp_registry
 from mcp_audit import write_mcp_audit
 
 
-mcp = FastMCP("joormann-smarthome")
+mcp = FastMCP("joormann-displayplayer")
 
 REPO_ROOT = Path(__file__).resolve().parent
 
@@ -48,7 +48,7 @@ def _read_ports_env() -> dict[str, str]:
     return out
 
 
-def _smarthome_base_url() -> str:
+def _lab_base_url() -> str:
     # Prefer env, else config/ports*.env, else default 5000 (per request).
     port = str(os.environ.get("FLASK_PORT") or "").strip()
     if not port:
@@ -73,7 +73,7 @@ def _safe_format_endpoint(template: str, params: dict[str, Any]) -> str:
 
 
 def _http_get_json(path_or_url: str, timeout: int = 10) -> dict[str, Any]:
-    base = _smarthome_base_url().rstrip("/") + "/"
+    base = _lab_base_url().rstrip("/") + "/"
     url = path_or_url
     if path_or_url.startswith("/"):
         url = urljoin(base, path_or_url.lstrip("/"))
@@ -201,7 +201,7 @@ def mcp_registry_status() -> dict[str, Any]:
             "registered_count": len(REGISTERED_TOOLS),
             "registered_tools": REGISTERED_TOOLS,
             "ignored_actions": IGNORED_ACTIONS,
-            "base_url": _smarthome_base_url(),
+            "base_url": _lab_base_url(),
         },
     }
 
