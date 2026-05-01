@@ -167,6 +167,8 @@ class MediaFolderRegistry:
             "active": bool(raw.get("active", True)),
             "file_count": int(raw.get("file_count") or 0),
             "media_count": int(raw.get("media_count") or 0),
+            "video_count": int(raw.get("video_count") or 0),
+            "image_count": int(raw.get("image_count") or 0),
             "last_scan_at": str(raw.get("last_scan_at") or "").strip(),
             "last_scan_status": str(raw.get("last_scan_status") or "never").strip() or "never",
             "last_scan_error": str(raw.get("last_scan_error") or "").strip(),
