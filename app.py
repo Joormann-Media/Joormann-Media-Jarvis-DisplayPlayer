@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 import json
 from typing import Any
+from urllib.parse import quote
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 from flask import Flask, jsonify, render_template, request, stream_with_context, Response, redirect
@@ -169,6 +170,56 @@ def _http_get_json(url: str, timeout: int = 8) -> tuple[bool, dict[str, Any], st
         return True, data if isinstance(data, dict) else {}, ""
     except Exception as exc:
         return False, {}, str(exc)
+
+
+def _resolve_remote_media_url(body: dict[str, Any], *, default_path: str = "/output/{filename}") -> str:
+    if not isinstance(body, dict):
+        return ""
+    for key in ("url", "stream_url", "source_url", "file_url", "media_url", "audio_url", "video_url"):
+        val = str(body.get(key) or "").strip()
+        if val:
+            return val
+
+    base_url = str(
+        body.get("source_base_url")
+        or body.get("source_node_url")
+        or body.get("node_base_url")
+        or body.get("base_url")
+        or ""
+    ).strip().rstrip("/")
+    if not base_url:
+        return ""
+
+    filename = str(
+        body.get("filename")
+        or body.get("file_name")
+        or body.get("sample_name")
+        or body.get("generation_filename")
+        or body.get("output_filename")
+        or body.get("name")
+        or ""
+    ).strip()
+    if not filename:
+        return ""
+
+    speaker_id = str(body.get("speaker_id") or "").strip()
+    source_kind = str(body.get("source_kind") or "").strip().lower()
+    template = str(body.get("source_path_template") or "").strip()
+    if template:
+        path = template
+    elif source_kind == "speaker_sample" and speaker_id:
+        path = "/speaker-sample/{speaker_id}/{filename}"
+    elif source_kind == "speaker_generation" and speaker_id:
+        path = "/speaker-generation/{speaker_id}/{filename}"
+    elif source_kind == "tts_output":
+        path = "/output/{filename}"
+    else:
+        path = default_path
+
+    safe_filename = quote(Path(filename).name)
+    safe_speaker_id = quote(speaker_id)
+    path = path.replace("{speaker_id}", safe_speaker_id).replace("{filename}", safe_filename)
+    return f"{base_url}{path if path.startswith('/') else '/' + path}"
 
 
 # ---------------------------------------------------------------------------
@@ -1460,6 +1511,12 @@ def api_video_stream_play():
 @app.post("/api/video/file/play")
 def api_video_file_play():
     body = request.get_json(silent=True) or {}
+    remote_url = _resolve_remote_media_url(body, default_path="/output/{filename}")
+    if remote_url:
+        result = video_manager.play(remote_url, kind="stream")
+        if not result.get("ok"):
+            return make_response(False, result.get("message", "Start fehlgeschlagen"), result, result.get("error_code", "video_start_failed"), 400)
+        return make_response(True, "Remote-Video gestartet.", result, "", 200)
     file_path = str(body.get("file_path") or body.get("path") or "").strip()
     if not file_path:
         return make_response(False, "file_path fehlt.", {}, "invalid_payload", 400)
