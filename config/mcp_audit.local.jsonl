@@ -1,0 +1,11 @@
+{"ts": 1777665514, "event_type": "endpoint_refresh", "payload": {"summary": {"total": 56, "by_category": {"unknown": 11, "system": 38, "portal": 7}, "by_risk": {"low": 32, "medium": 16, "dangerous": 8}}}}
+{"ts": 1777665516, "event_type": "action_generate", "payload": {"summary": {"endpoints_count": 56, "actions_total": 21}}}
+{"ts": 1777665518, "event_type": "action_save", "payload": {"count": 21}}
+{"ts": 1777666306, "event_type": "action_migrate_legacy_smarthome", "payload": {"count": 14}}
+{"ts": 1777666311, "event_type": "endpoint_refresh", "payload": {"summary": {"total": 56, "by_category": {"unknown": 14, "system": 4, "display": 6, "mcp": 6, "media": 7, "player": 4, "portal": 7, "stream": 3, "video": 5}, "by_risk": {"low": 31, "high": 16, "dangerous": 9}}}}
+{"ts": 1777666313, "event_type": "action_generate", "payload": {"summary": {"endpoints_count": 56, "actions_total": 14}}}
+{"ts": 1777666314, "event_type": "action_save", "payload": {"count": 14}}
+{"ts": 1777720908, "event_type": "endpoint_refresh", "payload": {"summary": {"total": 58, "by_category": {"unknown": 15, "system": 4, "display": 6, "mcp": 6, "media": 8, "player": 4, "portal": 7, "stream": 3, "video": 5}, "by_risk": {"low": 31, "high": 18, "dangerous": 9}}}}
+{"ts": 1777720910, "event_type": "endpoint_refresh", "payload": {"summary": {"total": 58, "by_category": {"unknown": 15, "system": 4, "display": 6, "mcp": 6, "media": 8, "player": 4, "portal": 7, "stream": 3, "video": 5}, "by_risk": {"low": 31, "high": 18, "dangerous": 9}}}}
+{"ts": 1777720912, "event_type": "action_generate", "payload": {"summary": {"endpoints_count": 58, "actions_total": 14}}}
+{"ts": 1777720912, "event_type": "action_save", "payload": {"count": 14}}

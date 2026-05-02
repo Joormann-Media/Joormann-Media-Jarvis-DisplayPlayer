@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>DisplayPlayer API-Dokumentation</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #f5f7fb; color: #0f172a; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 18px; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+    h1, h2, h3 { margin: 0 0 8px; }
+    .muted { color: #64748b; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 8px 10px; background: #f8fafc; border-bottom: 2px solid #e2e8f0; color: #475569; }
+    td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    .method { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; font-family: monospace; }
+    .GET { background: #dcfce7; color: #166534; }
+    .POST { background: #dbeafe; color: #1e40af; }
+    .DELETE { background: #fee2e2; color: #991b1b; }
+    .path { font-family: monospace; font-size: 12px; }
+    code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+    pre { background: #f1f5f9; border-radius: 8px; padding: 12px; font-size: 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+    .copy-btn { padding: 3px 8px; border-radius: 4px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer; font-size: 11px; float: right; }
+    .copy-btn:hover { background: #f1f5f9; }
+    .stats { display: flex; gap: 20px; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat-num { font-size: 1.8rem; font-weight: 700; color: #0ea5e9; }
+    .stat-label { font-size: 11px; color: #64748b; }
+  </style>
+</head>
+<body>
+{% set active_page = 'info' %}
+{% include "_nav.html" %}
+<div class="wrap">
+
+  <div class="card">
+    <h1>DisplayPlayer API-Dokumentation</h1>
+    <div class="muted">Alle REST-Endpunkte des Jarvis DisplayPlayer (Port {{ port }}).</div>
+    <div class="stats" style="margin-top:14px;">
+      <div class="stat"><div class="stat-num">{{ endpoint_count }}</div><div class="stat-label">Endpunkte</div></div>
+      {% for method, count in method_counts.items() %}
+      <div class="stat"><div class="stat-num">{{ count }}</div><div class="stat-label">{{ method }}</div></div>
+      {% endfor %}
+      <div class="stat"><div class="stat-num">{{ caps.version or '1.0.0' }}</div><div class="stat-label">Version</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Quick-Start cURL</h3>
+    <div id="baseUrl" style="display:none;"></div>
+    {% set base = "http://localhost:" + port|string %}
+    <div style="margin-bottom:10px;">
+      <button class="copy-btn" onclick="copyCode('ex1')">Kopieren</button>
+      <strong style="font-size:13px;">Display-Status abfragen</strong>
+      <pre id="ex1">curl {{ base }}/api/display/status</pre>
+    </div>
+    <div style="margin-bottom:10px;">
+      <button class="copy-btn" onclick="copyCode('ex2')">Kopieren</button>
+      <strong style="font-size:13px;">RTSP-Stream starten</strong>
+      <pre id="ex2">curl -X POST {{ base }}/api/video/stream/play \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"rtsp://192.168.1.100/stream"}'</pre>
+    </div>
+    <div style="margin-bottom:10px;">
+      <button class="copy-btn" onclick="copyCode('ex3')">Kopieren</button>
+      <strong style="font-size:13px;">Video stoppen</strong>
+      <pre id="ex3">curl -X POST {{ base }}/api/video/stop</pre>
+    </div>
+    <div style="margin-bottom:10px;">
+      <button class="copy-btn" onclick="copyCode('ex4')">Kopieren</button>
+      <strong style="font-size:13px;">Video-Ordner registrieren</strong>
+      <pre id="ex4">curl -X POST {{ base }}/api/media/folders \
+  -H 'Content-Type: application/json' \
+  -d '{"path":"/mnt/videos","label":"Filme NAS"}'</pre>
+    </div>
+    <div style="margin-bottom:10px;">
+      <button class="copy-btn" onclick="copyCode('ex5')">Kopieren</button>
+      <strong style="font-size:13px;">Portal-Sync</strong>
+      <pre id="ex5">curl -X POST {{ base }}/api/portal/sync</pre>
+    </div>
+    <div style="margin-bottom:10px;">
+      <button class="copy-btn" onclick="copyCode('ex6')">Kopieren</button>
+      <strong style="font-size:13px;">Health-Check</strong>
+      <pre id="ex6">curl {{ base }}/health</pre>
+    </div>
+  </div>
+
+  {% for section in caps.api_endpoints or [] %}
+  <div class="card">
+    <h3>{{ section.section }}</h3>
+    <table>
+      <thead>
+        <tr><th>Methode</th><th>Pfad</th><th>Beschreibung</th></tr>
+      </thead>
+      <tbody>
+        {% for ep in section.endpoints %}
+        <tr>
+          <td><span class="method {{ ep.method }}">{{ ep.method }}</span></td>
+          <td class="path">{{ ep.path }}</td>
+          <td>{{ ep.description }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endfor %}
+
+  {% if caps.environment %}
+  <div class="card">
+    <h3>Umgebungsvariablen</h3>
+    <table>
+      <thead><tr><th>Variable</th><th>Beschreibung / Standard</th></tr></thead>
+      <tbody>
+        {% for key, val in caps.environment.items() %}
+        <tr><td class="path">{{ key }}</td><td>{{ val }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="muted">Generiert: {{ generated_at }} | Service: {{ caps.service or 'joormann-media-jarvis-displayplayer' }}</div>
+  </div>
+
+</div>
+<script>
+function copyCode(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent.trim()).catch(() => {});
+}
+// Replace localhost with actual host
+(function() {
+  const base = window.location.origin;
+  document.querySelectorAll("pre").forEach(el => {
+    el.textContent = el.textContent.replace(/http:\/\/localhost:\d+/g, base);
+  });
+})();
+</script>
+</body>
+</html>

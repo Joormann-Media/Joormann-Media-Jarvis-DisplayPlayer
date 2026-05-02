@@ -1,0 +1,106 @@
+{
+  "service": "joormann-media-jarvis-displayplayer",
+  "version": "1.0.0",
+  "port": 5092,
+  "description": "Jarvis DisplayPlayer — Video-Wiedergabe, Stream-Verwaltung, Slideshow-Steuerung",
+  "features": [
+    "Video-Datei-Wiedergabe (mpv)",
+    "RTSP/HTTP-Stream-Wiedergabe",
+    "DevicePlayer Slideshow-Steuerung",
+    "Media-Ordner-Verwaltung",
+    "Portal Link/Relink/Sync"
+  ],
+  "pages": [
+    {"path": "/", "title": "Dashboard", "description": "Video-Status, Stream-Steuerung, DevicePlayer-Übersicht"},
+    {"path": "/media", "title": "Media", "description": "Video-Ordner registrieren, scannen und mit dem Portal synchronisieren"},
+    {"path": "/link", "title": "Link", "description": "Node mit Family Portal verbinden"},
+    {"path": "/relink", "title": "Re-Link", "description": "Bestehenden Node ohne Token neu verknüpfen"},
+    {"path": "/info", "title": "API-Doku", "description": "Alle API-Endpunkte mit Beispielen"}
+  ],
+  "api_endpoints": [
+    {
+      "section": "Display & Video",
+      "endpoints": [
+        {"method": "GET", "path": "/api/display/status", "description": "Aktueller Display/Video-Status (Video-Manager + DevicePlayer)"},
+        {"method": "GET", "path": "/api/display/config", "description": "Display-Konfiguration laden (Helligkeit, Rotation, Auflösung)"},
+        {"method": "POST", "path": "/api/display/config", "description": "Display-Konfiguration speichern"},
+        {"method": "GET", "path": "/api/display/deviceplayer/status", "description": "DevicePlayer (Slideshow-Renderer) Status"},
+        {"method": "GET", "path": "/api/display/deviceplayer/health", "description": "DevicePlayer Health-Check"},
+        {"method": "GET", "path": "/api/display/realtime", "description": "SSE-Stream: Display-Status in Echtzeit (alle 5s)"}
+      ]
+    },
+    {
+      "section": "Video-Wiedergabe",
+      "endpoints": [
+        {"method": "GET", "path": "/api/video/status", "description": "Aktueller Video-Wiedergabe-Status"},
+        {"method": "POST", "path": "/api/video/stream/play", "description": "RTSP/HTTP-Stream starten. Body: {url}"},
+        {"method": "POST", "path": "/api/video/file/play", "description": "Lokale Video-Datei abspielen. Body: {file_path}"},
+        {"method": "POST", "path": "/api/video/stop", "description": "Video/Stream stoppen"},
+        {"method": "GET", "path": "/api/video/files", "description": "Lokale Video-Dateien aus Stream-Storage auflisten"}
+      ]
+    },
+    {
+      "section": "Stream & Manifest",
+      "endpoints": [
+        {"method": "GET", "path": "/api/stream/config", "description": "Stream-Konfiguration laden (Storage-Target, Account, Manifest)"},
+        {"method": "POST", "path": "/api/stream/config", "description": "Stream-Konfiguration speichern"},
+        {"method": "POST", "path": "/api/stream/sync", "description": "Lokalen Sync-Zeitstempel aktualisieren"}
+      ]
+    },
+    {
+      "section": "Player-Service",
+      "endpoints": [
+        {"method": "GET", "path": "/api/player/setup", "description": "Player-Setup-Konfiguration laden (Service-Name, Repo-Link)"},
+        {"method": "POST", "path": "/api/player/setup", "description": "Player-Setup speichern"},
+        {"method": "GET", "path": "/api/player/status", "description": "Systemd-Service Status"},
+        {"method": "POST", "path": "/api/player/service/{action}", "description": "Systemd-Service steuern. action: start|stop|restart|enable|disable"}
+      ]
+    },
+    {
+      "section": "Media-Ordner",
+      "endpoints": [
+        {"method": "GET", "path": "/api/media/folders", "description": "Alle registrierten Video-Ordner auflisten"},
+        {"method": "POST", "path": "/api/media/folders", "description": "Neuen Ordner registrieren und scannen. Body: {path, label}"},
+        {"method": "GET", "path": "/api/media/folders/{id}", "description": "Ordner-Detail mit Scan-Ergebnis"},
+        {"method": "POST", "path": "/api/media/folders/{id}/scan", "description": "Ordner erneut scannen und mit Portal synchronisieren"},
+        {"method": "POST", "path": "/api/media/folders/{id}/active", "description": "Ordner aktivieren/deaktivieren. Body: {active: bool}"},
+        {"method": "POST", "path": "/api/media/folders/{id}/remove", "description": "Ordner aus Registry entfernen"},
+        {"method": "GET", "path": "/api/media/browse", "description": "Dateisystem durchsuchen. Query: ?path=/mnt/videos"}
+      ]
+    },
+    {
+      "section": "Dashboard",
+      "endpoints": [
+        {"method": "GET", "path": "/api/dashboard/overview", "description": "Aggregierter Dashboard-Überblick (Video, Player, Stream, Media)"}
+      ]
+    },
+    {
+      "section": "Portal",
+      "endpoints": [
+        {"method": "GET", "path": "/api/portal/status", "description": "Portal-Registrierungsstatus"},
+        {"method": "POST", "path": "/api/portal/register", "description": "Node erstmalig registrieren. Body: {portal_url, registration_token, machine_id, node_name}"},
+        {"method": "POST", "path": "/api/portal/relink", "description": "Re-Link ohne Token. Body: {portal_url, uuid, slug, client_id, mac_address}"},
+        {"method": "POST", "path": "/api/portal/sync", "description": "Vollständigen Sync mit dem Portal anstoßen"},
+        {"method": "POST", "path": "/api/portal/heartbeat", "description": "Heartbeat zum Portal senden"},
+        {"method": "POST", "path": "/api/portal/reset", "description": "Portal-Registrierung zurücksetzen (Token-Neuvergabe nötig)"}
+      ]
+    },
+    {
+      "section": "System",
+      "endpoints": [
+        {"method": "GET", "path": "/health", "description": "Health-Check (mpv, ffmpeg, DevicePlayer)"},
+        {"method": "GET", "path": "/api/health", "description": "JSON Health-Check"},
+        {"method": "GET", "path": "/api/update/status", "description": "Git-Update-Status (Commits hinter origin/main)"},
+        {"method": "POST", "path": "/api/update/apply", "description": "Git-Update anwenden (git pull --ff-only)"}
+      ]
+    }
+  ],
+  "environment": {
+    "FLASK_HOST": "0.0.0.0",
+    "FLASK_PORT": "5092",
+    "FLASK_DEBUG": "0",
+    "DISPLAYPLAYER_MPV_BIN": "mpv",
+    "DISPLAYPLAYER_MEDIA_ALLOWED_PREFIXES": "Kommagetrennte Pfad-Whitelist (optional)",
+    "DEVICEPLAYER_CONTROL_API_HOST": "http://127.0.0.1:5081"
+  }
+}

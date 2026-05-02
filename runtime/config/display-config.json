@@ -1,0 +1,11 @@
+{
+  "brightness_percent": 100,
+  "rotation_degrees": 0,
+  "fullscreen": true,
+  "resolution_width": 1920,
+  "resolution_height": 1080,
+  "transition_fps": 30,
+  "idle_sleep_ms": 200,
+  "video_output": "auto",
+  "updated_at": ""
+}

@@ -1191,7 +1191,10 @@ def _scan_and_sync_folder(folder_id: str) -> dict[str, Any]:
         return {"ok": False, "error": "not_found"}
 
     now = utc_now()
-    scan_result = media_scanner.scan_folder(folder["path"])
+    scan_result = media_scanner.scan_folder(
+        folder["path"],
+        str(folder.get("media_category") or "mixed"),
+    )
     summary = scan_result.get("summary", {})
     status = str(summary.get("status") or "error")
 

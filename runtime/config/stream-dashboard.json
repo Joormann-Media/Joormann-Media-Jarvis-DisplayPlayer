@@ -1,0 +1,10 @@
+{
+  "stream_account_name": "Jarvis-Test",
+  "stream_account_key": "jarvis-test-709723",
+  "streams_count": 1,
+  "admin_base_url": "https://joormann-family.de",
+  "selected_stream": "",
+  "manifest_version": "",
+  "last_sync_at": "",
+  "storage_target": "/mnt/deviceportal/media/stream/current"
+}

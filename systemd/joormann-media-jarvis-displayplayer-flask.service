@@ -1,0 +1,19 @@
+[Unit]
+Description=Joormann Media Jarvis DisplayPlayer Flask Management Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__SERVICE_USER__
+Group=__SERVICE_USER__
+SupplementaryGroups=video render input
+WorkingDirectory=/home/__SERVICE_USER__/projects/Joormann-Media-Jarvis-DisplayPlayer
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/home/__SERVICE_USER__/projects/Joormann-Media-Jarvis-DisplayPlayer/config/ports.env
+ExecStart=/home/__SERVICE_USER__/projects/Joormann-Media-Jarvis-DisplayPlayer/.venv/bin/python /home/__SERVICE_USER__/projects/Joormann-Media-Jarvis-DisplayPlayer/app.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

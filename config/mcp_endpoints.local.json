@@ -1,0 +1,1051 @@
+{
+  "generated_at": 1777720910,
+  "endpoints": [
+    {
+      "id": "ep_25473082b1cc",
+      "path": "/",
+      "path_template": "/",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "index",
+      "category": "unknown",
+      "provider": "display",
+      "kind": "unknown",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_c290386cdf6a",
+      "path": "/api/dashboard/overview",
+      "path_template": "/api/dashboard/overview",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_dashboard_overview",
+      "category": "system",
+      "provider": "display",
+      "kind": "system",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_f159f68a785e",
+      "path": "/api/display/config",
+      "path_template": "/api/display/config",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_display_config_get",
+      "category": "display",
+      "provider": "display",
+      "kind": "display",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_7eed069e8c85",
+      "path": "/api/display/config",
+      "path_template": "/api/display/config",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_display_config_set",
+      "category": "display",
+      "provider": "display",
+      "kind": "display",
+      "operation": "write",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_c1b9e7586b01",
+      "path": "/api/display/deviceplayer/health",
+      "path_template": "/api/display/deviceplayer/health",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_deviceplayer_health",
+      "category": "display",
+      "provider": "display",
+      "kind": "display",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_b485c62293b8",
+      "path": "/api/display/deviceplayer/status",
+      "path_template": "/api/display/deviceplayer/status",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_deviceplayer_status",
+      "category": "display",
+      "provider": "display",
+      "kind": "display",
+      "operation": "status",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_dc08849502f3",
+      "path": "/api/display/realtime",
+      "path_template": "/api/display/realtime",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_display_realtime",
+      "category": "display",
+      "provider": "display",
+      "kind": "display",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_2ac8c3e93c91",
+      "path": "/api/display/status",
+      "path_template": "/api/display/status",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_display_status",
+      "category": "display",
+      "provider": "display",
+      "kind": "display",
+      "operation": "status",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_3ff6002571c0",
+      "path": "/api/health",
+      "path_template": "/api/health",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_health",
+      "category": "system",
+      "provider": "display",
+      "kind": "system",
+      "operation": "status",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_edbd08734984",
+      "path": "/api/mcp/actions",
+      "path_template": "/api/mcp/actions",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_mcp_actions",
+      "category": "mcp",
+      "provider": "display",
+      "kind": "mcp",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_7b2d3937f989",
+      "path": "/api/mcp/actions/generate-light-candidates",
+      "path_template": "/api/mcp/actions/generate-light-candidates",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_mcp_actions_generate_light_candidates",
+      "category": "mcp",
+      "provider": "display",
+      "kind": "mcp",
+      "operation": "write",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_3cfe31d9c350",
+      "path": "/api/mcp/actions/save",
+      "path_template": "/api/mcp/actions/save",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_mcp_actions_save",
+      "category": "mcp",
+      "provider": "display",
+      "kind": "mcp",
+      "operation": "set",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_7e4bbd3dd190",
+      "path": "/api/mcp/endpoints",
+      "path_template": "/api/mcp/endpoints",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_mcp_endpoints",
+      "category": "mcp",
+      "provider": "display",
+      "kind": "mcp",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_185d3cc3b87f",
+      "path": "/api/mcp/endpoints/refresh",
+      "path_template": "/api/mcp/endpoints/refresh",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_mcp_endpoints_refresh",
+      "category": "mcp",
+      "provider": "display",
+      "kind": "mcp",
+      "operation": "write",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_925b1699904d",
+      "path": "/api/mcp/export",
+      "path_template": "/api/mcp/export",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_mcp_export",
+      "category": "mcp",
+      "provider": "display",
+      "kind": "mcp",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_3767227788ea",
+      "path": "/api/media/browse",
+      "path_template": "/api/media/browse",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_media_browse",
+      "category": "media",
+      "provider": "display",
+      "kind": "media",
+      "operation": "list",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_37aad0d13423",
+      "path": "/api/media/folders",
+      "path_template": "/api/media/folders",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_media_folders_list",
+      "category": "media",
+      "provider": "display",
+      "kind": "media",
+      "operation": "list",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_a5f985e0dd25",
+      "path": "/api/media/folders",
+      "path_template": "/api/media/folders",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_media_folders_add",
+      "category": "media",
+      "provider": "display",
+      "kind": "media",
+      "operation": "write",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_1bcacf613f5a",
+      "path": "/api/media/folders/<folder_id>",
+      "path_template": "/api/media/folders/{folder_id}",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_media_folder_detail",
+      "category": "media",
+      "provider": "display",
+      "kind": "media",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_534527e97b8a",
+      "path": "/api/media/folders/<folder_id>/active",
+      "path_template": "/api/media/folders/{folder_id}/active",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_media_folder_active",
+      "category": "media",
+      "provider": "display",
+      "kind": "media",
+      "operation": "write",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_2b4705b668b3",
+      "path": "/api/media/folders/<folder_id>/category",
+      "path_template": "/api/media/folders/{folder_id}/category",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_media_folder_category",
+      "category": "media",
+      "provider": "display",
+      "kind": "media",
+      "operation": "write",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_8eadb3b9324c",
+      "path": "/api/media/folders/<folder_id>/remove",
+      "path_template": "/api/media/folders/{folder_id}/remove",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_media_folder_remove",
+      "category": "media",
+      "provider": "display",
+      "kind": "media",
+      "operation": "write",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_543f6af9e25e",
+      "path": "/api/media/folders/<folder_id>/scan",
+      "path_template": "/api/media/folders/{folder_id}/scan",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_media_folder_scan",
+      "category": "media",
+      "provider": "display",
+      "kind": "media",
+      "operation": "write",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_028e4c3cdac2",
+      "path": "/api/player/service/<action>",
+      "path_template": "/api/player/service/{action}",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_player_service_action",
+      "category": "player",
+      "provider": "display",
+      "kind": "player",
+      "operation": "write",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_4cf3a0bf4d5f",
+      "path": "/api/player/setup",
+      "path_template": "/api/player/setup",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_player_setup_get",
+      "category": "player",
+      "provider": "display",
+      "kind": "player",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_66de5788b3d5",
+      "path": "/api/player/setup",
+      "path_template": "/api/player/setup",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_player_setup_set",
+      "category": "player",
+      "provider": "display",
+      "kind": "player",
+      "operation": "set",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_caeba1c45e91",
+      "path": "/api/player/status",
+      "path_template": "/api/player/status",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_player_status_get",
+      "category": "player",
+      "provider": "display",
+      "kind": "player",
+      "operation": "status",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_f0129bd7a9a4",
+      "path": "/api/portal/heartbeat",
+      "path_template": "/api/portal/heartbeat",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_portal_heartbeat",
+      "category": "portal",
+      "provider": "display",
+      "kind": "portal",
+      "operation": "write",
+      "risk_level": "dangerous",
+      "is_action": true,
+      "mcp_candidate": false,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_9896f7379ad0",
+      "path": "/api/portal/peers",
+      "path_template": "/api/portal/peers",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_portal_peers",
+      "category": "portal",
+      "provider": "display",
+      "kind": "portal",
+      "operation": "read",
+      "risk_level": "dangerous",
+      "is_action": false,
+      "mcp_candidate": false,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_41bc9d3a6a56",
+      "path": "/api/portal/register",
+      "path_template": "/api/portal/register",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_portal_register",
+      "category": "portal",
+      "provider": "display",
+      "kind": "portal",
+      "operation": "write",
+      "risk_level": "dangerous",
+      "is_action": true,
+      "mcp_candidate": false,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_29f6bb7e61c3",
+      "path": "/api/portal/relink",
+      "path_template": "/api/portal/relink",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_portal_relink",
+      "category": "portal",
+      "provider": "display",
+      "kind": "portal",
+      "operation": "write",
+      "risk_level": "dangerous",
+      "is_action": true,
+      "mcp_candidate": false,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_b1676f27ff73",
+      "path": "/api/portal/reset",
+      "path_template": "/api/portal/reset",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_portal_reset",
+      "category": "portal",
+      "provider": "display",
+      "kind": "portal",
+      "operation": "write",
+      "risk_level": "dangerous",
+      "is_action": true,
+      "mcp_candidate": false,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_66e0f86aca2b",
+      "path": "/api/portal/status",
+      "path_template": "/api/portal/status",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_portal_status",
+      "category": "portal",
+      "provider": "display",
+      "kind": "portal",
+      "operation": "status",
+      "risk_level": "dangerous",
+      "is_action": false,
+      "mcp_candidate": false,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_75469d1e8a13",
+      "path": "/api/portal/sync",
+      "path_template": "/api/portal/sync",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_portal_sync",
+      "category": "portal",
+      "provider": "display",
+      "kind": "portal",
+      "operation": "sync",
+      "risk_level": "dangerous",
+      "is_action": true,
+      "mcp_candidate": false,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_06336b679065",
+      "path": "/api/stream/config",
+      "path_template": "/api/stream/config",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_stream_config_get",
+      "category": "stream",
+      "provider": "display",
+      "kind": "stream",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_5ad3e2038c18",
+      "path": "/api/stream/config",
+      "path_template": "/api/stream/config",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_stream_config_set",
+      "category": "stream",
+      "provider": "display",
+      "kind": "stream",
+      "operation": "write",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_f6da6204fe0c",
+      "path": "/api/stream/sync",
+      "path_template": "/api/stream/sync",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_stream_sync",
+      "category": "stream",
+      "provider": "display",
+      "kind": "stream",
+      "operation": "sync",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_1888986bc30c",
+      "path": "/api/update/apply",
+      "path_template": "/api/update/apply",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_update_apply",
+      "category": "system",
+      "provider": "display",
+      "kind": "system",
+      "operation": "write",
+      "risk_level": "dangerous",
+      "is_action": true,
+      "mcp_candidate": false,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_c6350b31d53e",
+      "path": "/api/update/status",
+      "path_template": "/api/update/status",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_update_status",
+      "category": "system",
+      "provider": "display",
+      "kind": "system",
+      "operation": "status",
+      "risk_level": "dangerous",
+      "is_action": false,
+      "mcp_candidate": false,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_64ca7360cda1",
+      "path": "/api/video/file/play",
+      "path_template": "/api/video/file/play",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_video_file_play",
+      "category": "video",
+      "provider": "display",
+      "kind": "video",
+      "operation": "play",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_79a9af3cda39",
+      "path": "/api/video/files",
+      "path_template": "/api/video/files",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_video_files",
+      "category": "video",
+      "provider": "display",
+      "kind": "video",
+      "operation": "list",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_0d035d8d35e5",
+      "path": "/api/video/status",
+      "path_template": "/api/video/status",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "api_video_status",
+      "category": "video",
+      "provider": "display",
+      "kind": "video",
+      "operation": "status",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_71b4b4efa3a6",
+      "path": "/api/video/stop",
+      "path_template": "/api/video/stop",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_video_stop",
+      "category": "video",
+      "provider": "display",
+      "kind": "video",
+      "operation": "stop",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_273b395527d5",
+      "path": "/api/video/stream/play",
+      "path_template": "/api/video/stream/play",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "api_video_stream_play",
+      "category": "video",
+      "provider": "display",
+      "kind": "video",
+      "operation": "play",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_68bd370cb09c",
+      "path": "/health",
+      "path_template": "/health",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "health",
+      "category": "unknown",
+      "provider": "display",
+      "kind": "unknown",
+      "operation": "status",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_f35a13cbe1be",
+      "path": "/index",
+      "path_template": "/index",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "index",
+      "category": "unknown",
+      "provider": "display",
+      "kind": "unknown",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_7d14998c8d44",
+      "path": "/info",
+      "path_template": "/info",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "info",
+      "category": "unknown",
+      "provider": "display",
+      "kind": "unknown",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_1fd68bd84c73",
+      "path": "/link",
+      "path_template": "/link",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "endpoint": "link_portal",
+      "category": "unknown",
+      "provider": "display",
+      "kind": "unknown",
+      "operation": "read",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_dcd0445bda98",
+      "path": "/mcp-settings",
+      "path_template": "/mcp-settings",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "mcp_settings_page",
+      "category": "unknown",
+      "provider": "display",
+      "kind": "unknown",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_936827995733",
+      "path": "/mcp-settings/actions",
+      "path_template": "/mcp-settings/actions",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "mcp_settings_actions_page",
+      "category": "unknown",
+      "provider": "display",
+      "kind": "unknown",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_93231dd04b0a",
+      "path": "/mcp-settings/endpoints",
+      "path_template": "/mcp-settings/endpoints",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "mcp_settings_endpoints_page",
+      "category": "unknown",
+      "provider": "display",
+      "kind": "unknown",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_56b944d103c8",
+      "path": "/mcp-settings/export",
+      "path_template": "/mcp-settings/export",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "mcp_settings_export_page",
+      "category": "unknown",
+      "provider": "display",
+      "kind": "unknown",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_376d9bc8da89",
+      "path": "/mcp-settings/overview",
+      "path_template": "/mcp-settings/overview",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "mcp_settings_overview_page",
+      "category": "unknown",
+      "provider": "display",
+      "kind": "unknown",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_66b0e496b2fc",
+      "path": "/mcp-settings/simple",
+      "path_template": "/mcp-settings/simple",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "mcp_settings_simple_page",
+      "category": "unknown",
+      "provider": "display",
+      "kind": "unknown",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_bbfb90647c21",
+      "path": "/media",
+      "path_template": "/media",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "media",
+      "category": "unknown",
+      "provider": "display",
+      "kind": "unknown",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_b7b179750f6d",
+      "path": "/relink",
+      "path_template": "/relink",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "endpoint": "relink_portal",
+      "category": "unknown",
+      "provider": "display",
+      "kind": "unknown",
+      "operation": "read",
+      "risk_level": "high",
+      "is_action": true,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    },
+    {
+      "id": "ep_22dd08db713f",
+      "path": "/static/<path:filename>",
+      "path_template": "/static/{filename}",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "static",
+      "category": "unknown",
+      "provider": "display",
+      "kind": "unknown",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": false,
+      "ignored": true,
+      "notes": ""
+    },
+    {
+      "id": "ep_04ea6f7e58e1",
+      "path": "/video/<path:filename>",
+      "path_template": "/video/{filename}",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "video_public_file",
+      "category": "unknown",
+      "provider": "display",
+      "kind": "unknown",
+      "operation": "read",
+      "risk_level": "low",
+      "is_action": false,
+      "mcp_candidate": true,
+      "ignored": false,
+      "notes": ""
+    }
+  ]
+}

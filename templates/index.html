@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>DisplayPlayer Dashboard</title>
+  <style>
+    *{box-sizing:border-box;}
+    body{font-family:"Space Grotesk","Segoe UI",system-ui,sans-serif;margin:0;background:#0b1120;color:#e9efff;}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:14px;}
+    .card{background:#111827;border:1px solid #1e3a5f;border-radius:14px;padding:16px;}
+    .card h3{margin:0 0 12px;color:#60a5fa;font-size:.95rem;font-weight:700;letter-spacing:.04em;}
+    .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+    .badge-running{background:#064e3b;color:#6ee7b7;}
+    .badge-idle{background:#1e293b;color:#94a3b8;}
+    .badge-ok{background:#1a3a2a;color:#4ade80;}
+    .badge-error{background:#450a0a;color:#fca5a5;}
+    .badge-available{background:#0c2a4a;color:#60a5fa;}
+    .badge-unavailable{background:#1e293b;color:#94a3b8;}
+    .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:13px;}
+    .row label{color:#94a3b8;}
+    .row span{color:#e9efff;font-weight:600;}
+    .muted{color:#64748b;font-size:12px;}
+    input[type=text],input[type=url]{width:100%;padding:9px 11px;border-radius:8px;border:1px solid #2c3c63;background:#0d1b33;color:#e9efff;font-size:13px;margin-bottom:8px;}
+    input::placeholder{color:#4a5c80;}
+    .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+    button{padding:8px 16px;border-radius:8px;border:1px solid #0ea5e9;background:#0ea5e9;color:#fff;font-weight:700;cursor:pointer;font-size:13px;transition:opacity .15s;}
+    button:hover{opacity:.85;}
+    .btn-stop{border-color:#dc2626;background:#dc2626;}
+    .btn-outline{background:transparent;color:#60a5fa;border-color:#2c3c63;}
+    .btn-sm{padding:5px 10px;font-size:12px;}
+    .status-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;}
+    .dot-green{background:#22c55e;box-shadow:0 0 6px #22c55e;}
+    .dot-red{background:#ef4444;}
+    .dot-grey{background:#64748b;}
+    .section-title{color:#60a5fa;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin:0 0 10px;}
+    .video-source{font-family:monospace;font-size:12px;color:#94a3b8;word-break:break-all;margin-top:4px;}
+    .refresh-info{color:#4a5c80;font-size:11px;text-align:right;margin-bottom:10px;}
+    #streamMsg,#fileMsg,#syncMsg{font-size:12px;margin-top:6px;min-height:16px;}
+    pre{background:#0d1b33;border-radius:8px;padding:10px;font-size:11px;overflow-x:auto;white-space:pre-wrap;color:#94a3b8;margin-top:8px;max-height:200px;}
+  </style>
+</head>
+<body>
+{% set active_page = 'dashboard' %}
+{% include "_nav.html" %}
+<div class="wrap">
+  <div class="refresh-info" id="refreshInfo">Aktualisiert: —</div>
+
+  <div class="grid">
+
+    <!-- Video Status -->
+    <div class="card" id="videoCard">
+      <h3>🎬 Video-Wiedergabe</h3>
+      <div class="row"><label>Status</label><span id="videoStatus"><span class="status-dot dot-grey"></span>Lädt...</span></div>
+      <div class="row"><label>Quelle</label><span id="videoKind">—</span></div>
+      <div id="videoSourceRow" style="display:none;"><div class="video-source" id="videoSource"></div></div>
+      <div class="row" id="videoPidRow" style="display:none;"><label>PID</label><span id="videoPid" class="muted">—</span></div>
+
+      <div style="margin-top:12px;">
+        <div class="section-title">Stream starten</div>
+        <input type="url" id="streamUrl" placeholder="rtsp://192.168.1.100/stream oder http://...">
+        <div class="btn-row">
+          <button onclick="playStream()">Stream starten</button>
+          <button class="btn-stop" onclick="stopVideo()">Stoppen</button>
+        </div>
+        <div id="streamMsg"></div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <div class="section-title">Lokale Video-Datei</div>
+        <div id="videoFileList" class="muted">Lädt Dateien...</div>
+        <div id="fileMsg"></div>
+      </div>
+    </div>
+
+    <!-- DevicePlayer / Slideshow -->
+    <div class="card" id="deviceplayerCard">
+      <h3>🖥 DevicePlayer (Slideshow)</h3>
+      <div class="row"><label>Verfügbar</label><span id="dpAvailable"><span class="status-dot dot-grey"></span>Lädt...</span></div>
+      <div class="row"><label>Render-Status</label><span id="dpRender">—</span></div>
+      <div class="row"><label>Letzter Fehler</label><span id="dpError" class="muted">—</span></div>
+
+      <div style="margin-top:12px;">
+        <div class="section-title">Systemd-Service</div>
+        <div class="row"><label>Service</label><span id="svcName" class="muted">—</span></div>
+        <div class="row"><label>Status</label><span id="svcState">—</span></div>
+        <div class="btn-row">
+          <button class="btn-sm" onclick="svcAction('start')">Start</button>
+          <button class="btn-sm btn-stop" onclick="svcAction('stop')">Stop</button>
+          <button class="btn-sm btn-outline" onclick="svcAction('restart')">Restart</button>
+          <button class="btn-sm btn-outline" onclick="svcAction('enable')">Enable</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stream / Manifest Config -->
+    <div class="card">
+      <h3>📡 Stream & Manifest</h3>
+      <div class="row"><label>Storage-Target</label><span id="storagePath" class="muted">—</span></div>
+      <div class="row"><label>Assets</label><span id="assetsCount">—</span></div>
+      <div class="row"><label>Letzter Sync</label><span id="lastSync" class="muted">—</span></div>
+      <div class="row"><label>Manifest-Version</label><span id="manifestVer" class="muted">—</span></div>
+
+      <div style="margin-top:12px;">
+        <div class="section-title">Storage-Target konfigurieren</div>
+        <input type="text" id="storageTarget" placeholder="/mnt/deviceportal/media/stream/current">
+        <div class="btn-row">
+          <button onclick="saveStreamConfig()">Speichern</button>
+          <button class="btn-outline" onclick="triggerSync()">Sync-Timestamp</button>
+        </div>
+        <div id="syncMsg"></div>
+      </div>
+    </div>
+
+    <!-- Portal Status -->
+    <div class="card">
+      <h3>🔗 Portal-Status</h3>
+      <div class="row"><label>Registriert</label><span id="portalReg">—</span></div>
+      <div class="row"><label>Node-Name</label><span id="portalName" class="muted">—</span></div>
+      <div class="row"><label>Portal-URL</label><span id="portalUrl" class="muted">—</span></div>
+      <div class="row"><label>Node UUID</label><span id="portalUuid" class="muted">—</span></div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn-sm" onclick="portalSync()">Sync</button>
+        <button class="btn-sm btn-outline" onclick="portalHeartbeat()">Heartbeat</button>
+        <a href="/link"><button class="btn-sm btn-outline">Link-Einstellungen</button></a>
+      </div>
+      <pre id="portalOut"></pre>
+    </div>
+
+    <!-- System Health -->
+    <div class="card">
+      <h3>⚙ System Health</h3>
+      <div class="row"><label>mpv</label><span id="hMpv">—</span></div>
+      <div class="row"><label>ffmpeg</label><span id="hFfmpeg">—</span></div>
+      <div class="row"><label>DevicePlayer</label><span id="hDp">—</span></div>
+      <div class="row"><label>Version</label><span id="hVer" class="muted">—</span></div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn-sm btn-outline" onclick="loadHealth()">Refresh</button>
+      </div>
+    </div>
+
+    <!-- Media-Ordner Überblick -->
+    <div class="card">
+      <h3>📂 Video-Ordner</h3>
+      <div id="mediaOverview" class="muted">Lädt...</div>
+      <div class="btn-row" style="margin-top:10px;">
+        <a href="/media"><button class="btn-sm">Ordner verwalten</button></a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const api = (path, opts) => fetch(path, opts).then(r => r.json());
+
+function dot(ok) {
+  const cls = ok ? "dot-green" : ok === false ? "dot-red" : "dot-grey";
+  return `<span class="status-dot ${cls}"></span>`;
+}
+function badge(text, cls) { return `<span class="badge badge-${cls}">${text}</span>`; }
+function ts(str) { return str ? str.slice(0,16).replace('T',' ') : '—'; }
+
+async function loadDashboard() {
+  try {
+    const data = await api("/api/dashboard/overview");
+    if (!data.ok) return;
+    const d = data.data;
+
+    // Video
+    const vs = d.video || {};
+    const running = vs.running;
+    document.getElementById("videoStatus").innerHTML = dot(running) + (running ? badge("Läuft","running") : badge("Idle","idle"));
+    document.getElementById("videoKind").textContent = vs.kind || "idle";
+    const srcRow = document.getElementById("videoSourceRow");
+    if (running && vs.source) {
+      srcRow.style.display = "block";
+      document.getElementById("videoSource").textContent = vs.source;
+    } else { srcRow.style.display = "none"; }
+    const pidRow = document.getElementById("videoPidRow");
+    if (running && vs.pid) { pidRow.style.display = "flex"; document.getElementById("videoPid").textContent = vs.pid; }
+    else { pidRow.style.display = "none"; }
+
+    // DevicePlayer
+    const dp = d.deviceplayer || {};
+    const dpAvail = dp.available;
+    document.getElementById("dpAvailable").innerHTML = dot(dpAvail) + (dpAvail ? badge("Verfügbar","available") : badge("Nicht erreichbar","unavailable"));
+    const health = dp.health || {};
+    document.getElementById("dpRender").textContent = health.render_runtime || "—";
+    document.getElementById("dpError").textContent = health.last_error || "—";
+
+    // Service
+    const svc = (d.player || {}).service || {};
+    document.getElementById("svcName").textContent = svc.service_name || "—";
+    document.getElementById("svcState").innerHTML = svc.running
+      ? badge("running","running")
+      : badge(svc.active_state || "unbekannt", svc.running ? "running" : "idle");
+
+    // Stream
+    const stream = d.stream || {};
+    document.getElementById("storagePath").textContent = stream.storage_target || "—";
+    document.getElementById("assetsCount").textContent = (stream.assets_count ?? "—") + " Dateien";
+    document.getElementById("lastSync").textContent = ts(stream.last_sync_at);
+    document.getElementById("manifestVer").textContent = stream.manifest_version || "—";
+    if (!document.getElementById("storageTarget").value) {
+      document.getElementById("storageTarget").value = stream.storage_target || "";
+    }
+
+    // Media
+    const media = d.media || {};
+    const mo = document.getElementById("mediaOverview");
+    mo.innerHTML = `<div class="row"><label>Ordner</label><span>${media.folder_count || 0}</span></div>`
+      + `<div class="row"><label>Dateien</label><span>${media.total_file_count || 0}</span></div>`
+      + `<div class="row"><label>Videos</label><span>${media.total_media_count || 0}</span></div>`;
+
+    // Portal
+    const portal = await api("/api/portal/status");
+    if (portal.ok) {
+      const ps = portal.data;
+      document.getElementById("portalReg").innerHTML = ps.registered ? badge("Registriert","ok") : badge("Nicht registriert","idle");
+      document.getElementById("portalName").textContent = ps.nodeName || "—";
+      document.getElementById("portalUrl").textContent = ps.portalUrl || "—";
+      document.getElementById("portalUuid").textContent = ps.nodeUuid || "—";
+    }
+
+    document.getElementById("refreshInfo").textContent = "Aktualisiert: " + new Date().toLocaleTimeString("de-DE");
+  } catch(e) { console.warn("Dashboard error", e); }
+}
+
+async function loadHealth() {
+  try {
+    const r = await api("/api/health");
+    if (!r.ok) return;
+    const d = r.data;
+    const checks = d.checks || {};
+    document.getElementById("hMpv").innerHTML = checks.mpv_installed ? badge("installiert","ok") : badge("fehlt","error");
+    document.getElementById("hFfmpeg").innerHTML = checks.ffmpeg_installed ? badge("installiert","ok") : badge("fehlt","idle");
+    document.getElementById("hDp").innerHTML = checks.deviceplayer_available ? badge("erreichbar","available") : badge("nicht erreichbar","idle");
+    document.getElementById("hVer").textContent = d.version || "—";
+  } catch(e) {}
+}
+
+async function loadVideoFiles() {
+  try {
+    const r = await api("/api/video/files");
+    if (!r.ok) { document.getElementById("videoFileList").textContent = r.message || "Fehler"; return; }
+    const files = r.data.files || [];
+    const el = document.getElementById("videoFileList");
+    if (files.length === 0) { el.textContent = "Keine lokalen Videos gefunden."; return; }
+    el.innerHTML = files.slice(0,12).map(f => {
+      const mb = (f.size_bytes / 1048576).toFixed(1);
+      return `<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid #1e3a5f;">
+        <span style="cursor:pointer;color:#60a5fa;" onclick="playFile('${f.path.replace(/'/g,"\\'")}')">▶ ${f.name}</span>
+        <span class="muted">${mb} MB</span>
+      </div>`;
+    }).join("") + (files.length > 12 ? `<div class="muted" style="margin-top:4px;">+${files.length-12} weitere → <a href="/media" style="color:#60a5fa;">Media</a></div>` : "");
+  } catch(e) { document.getElementById("videoFileList").textContent = "Fehler: " + e; }
+}
+
+async function playStream() {
+  const url = document.getElementById("streamUrl").value.trim();
+  const msg = document.getElementById("streamMsg");
+  if (!url) { msg.style.color="#ef4444"; msg.textContent = "URL fehlt."; return; }
+  msg.style.color="#94a3b8"; msg.textContent = "Starte Stream...";
+  try {
+    const r = await api("/api/video/stream/play", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({url})});
+    if (r.ok) { msg.style.color="#22c55e"; msg.textContent = "Stream gestartet."; loadDashboard(); }
+    else { msg.style.color="#ef4444"; msg.textContent = r.message || "Fehler."; }
+  } catch(e) { msg.style.color="#ef4444"; msg.textContent = "Fehler: " + e; }
+}
+
+async function playFile(path) {
+  const msg = document.getElementById("fileMsg");
+  msg.style.color="#94a3b8"; msg.textContent = "Starte Video...";
+  try {
+    const r = await api("/api/video/file/play", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({file_path: path})});
+    if (r.ok) { msg.style.color="#22c55e"; msg.textContent = "Video gestartet."; loadDashboard(); }
+    else { msg.style.color="#ef4444"; msg.textContent = r.message || "Fehler."; }
+  } catch(e) { msg.style.color="#ef4444"; msg.textContent = "Fehler: " + e; }
+}
+
+async function stopVideo() {
+  try {
+    await api("/api/video/stop", {method:"POST"});
+    document.getElementById("streamMsg").textContent = "";
+    loadDashboard();
+  } catch(e) {}
+}
+
+async function svcAction(action) {
+  try {
+    const r = await api(`/api/player/service/${action}`, {method:"POST"});
+    if (r.ok) loadDashboard();
+    else alert(r.message || "Fehler.");
+  } catch(e) { alert("Netzwerkfehler: " + e); }
+}
+
+async function saveStreamConfig() {
+  const target = document.getElementById("storageTarget").value.trim();
+  const msg = document.getElementById("syncMsg");
+  if (!target) return;
+  try {
+    const r = await api("/api/stream/config", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({storage_target: target})});
+    if (r.ok) { msg.style.color="#22c55e"; msg.textContent = "Gespeichert."; loadDashboard(); }
+    else { msg.style.color="#ef4444"; msg.textContent = r.message || "Fehler."; }
+  } catch(e) { msg.style.color="#ef4444"; msg.textContent = "Fehler: " + e; }
+}
+
+async function triggerSync() {
+  const msg = document.getElementById("syncMsg");
+  try {
+    const r = await api("/api/stream/sync", {method:"POST"});
+    if (r.ok) { msg.style.color="#22c55e"; msg.textContent = "Sync-Timestamp aktualisiert."; loadDashboard(); }
+    else { msg.style.color="#ef4444"; msg.textContent = r.message || "Fehler."; }
+  } catch(e) {}
+}
+
+async function portalSync() {
+  const out = document.getElementById("portalOut");
+  out.textContent = "Sync läuft...";
+  try {
+    const r = await fetch("/api/portal/sync", {method:"POST"});
+    const data = await r.json();
+    out.textContent = JSON.stringify(data, null, 2);
+    loadDashboard();
+  } catch(e) { out.textContent = "Fehler: " + e; }
+}
+
+async function portalHeartbeat() {
+  const out = document.getElementById("portalOut");
+  out.textContent = "Heartbeat...";
+  try {
+    const r = await fetch("/api/portal/heartbeat", {method:"POST"});
+    const data = await r.json();
+    out.textContent = JSON.stringify(data, null, 2);
+  } catch(e) { out.textContent = "Fehler: " + e; }
+}
+
+// Initial load
+loadDashboard();
+loadHealth();
+loadVideoFiles();
+// Auto-refresh every 12s
+setInterval(() => { loadDashboard(); loadHealth(); }, 12000);
+</script>
+</body>
+</html>
