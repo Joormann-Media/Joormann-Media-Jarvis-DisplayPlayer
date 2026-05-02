@@ -2330,6 +2330,7 @@ def _build_mcp_intents_payload() -> list[dict[str, Any]]:
                 "optionalParams": action.get("optional_params") if isinstance(action.get("optional_params"), list) else [],
                 "source": "mcp",
                 "isActive": bool(action.get("enabled", False)),
+                "routeKey": "display_output",
             }
         )
     return out
