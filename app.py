@@ -20,7 +20,7 @@ from typing import Any
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
-from flask import Flask, jsonify, render_template, request, stream_with_context, Response, redirect
+from flask import Flask, jsonify, render_template, request, stream_with_context, Response, redirect, send_from_directory
 
 from services.media_registry import MediaFolderRegistry, MediaFolderValidationError
 from services.media_scanner import MediaScanner
@@ -808,6 +808,20 @@ def _collect_api_endpoints(api_base_url: str) -> list[dict[str, Any]]:
                 "url": f"{api_base_url.rstrip('/')}{path}",
                 "description": str(ep.get("description") or "").strip(),
             })
+    extra = [
+        {
+            "section": "Media",
+            "method": "GET",
+            "path": "/video/<filename>",
+            "url": f"{api_base_url.rstrip('/')}/video/<filename>",
+            "description": "Öffentlicher Video-Dateizugriff per Dateiname.",
+        }
+    ]
+    known = {(str(item.get("method") or "").upper(), str(item.get("path") or "")) for item in out if isinstance(item, dict)}
+    for item in extra:
+        key = (str(item.get("method") or "").upper(), str(item.get("path") or ""))
+        if key not in known:
+            out.append(item)
     return out
 
 
@@ -842,6 +856,9 @@ def _build_display_payload(
         "videoKind": video_status.get("kind", "idle"),
         "apiEndpointCount": len(api_endpoints),
         "apiEndpointPaths": endpoint_paths,
+        "mediaAccess": {
+            "videoFileUrlTemplate": f"http://{_get_local_ip()}:{int(os.getenv('FLASK_PORT', '5097'))}/video/{{filename}}",
+        },
         "updatedAt": utc_now(),
     }
 
@@ -1099,6 +1116,9 @@ def _do_portal_sync(cfg: dict[str, Any] | None = None) -> tuple[bool, int, dict[
             "media": media_status,
             "health": _health_payload(),
             "timestamp": utc_now(),
+        },
+        "media_access": {
+            "video_file_template": f"{base_url}/video/{{filename}}",
         },
     }
     headers_payload = dict(payload)
@@ -1494,6 +1514,35 @@ def api_deviceplayer_health():
 @app.get("/api/video/status")
 def api_video_status():
     return make_response(True, "ok", video_manager.status(), "", 200)
+
+
+def _resolve_public_video_file(filename: str) -> Path | None:
+    safe_name = Path(str(filename or "").strip()).name
+    if not safe_name:
+        return None
+    stream_cfg = _load_stream_config()
+    candidates = [
+        Path(str(stream_cfg.get("storage_target") or "/mnt/deviceportal/media/stream/current")) / "video",
+        PROJECT_ROOT / "content",
+        PROJECT_ROOT / "runtime" / "video",
+    ]
+    for folder in candidates:
+        try:
+            base = folder.resolve()
+        except Exception:
+            continue
+        file_path = (base / safe_name).resolve()
+        if file_path.exists() and file_path.is_file() and str(file_path).startswith(str(base)):
+            return file_path
+    return None
+
+
+@app.get("/video/<path:filename>")
+def video_public_file(filename: str):
+    target = _resolve_public_video_file(filename)
+    if target is None:
+        return make_response(False, "Datei nicht gefunden", {"filename": Path(filename).name}, "file_missing", 404)
+    return send_from_directory(str(target.parent), target.name)
 
 
 @app.post("/api/video/stream/play")
