@@ -1738,6 +1738,10 @@ def _local_peer_modules() -> list[dict[str, Any]]:
     override = str(os.getenv("DEVICE_PORTAL_CONFIG_JSON") or "").strip()
     if override:
         config_paths.append(Path(override))
+    config_paths.extend([
+        Path.home() / "projects" / "Joormann-Media-Deviceportal" / "var" / "data" / "config.json",
+        PROJECT_ROOT.parent / "Joormann-Media-Deviceportal" / "var" / "data" / "config.json",
+    ])
     config_paths.extend(DEVICE_PORTAL_CONFIG_PATHS)
 
     for path in config_paths:
