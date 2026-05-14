@@ -10,13 +10,13 @@
       "media_count": 3032,
       "video_count": 281,
       "image_count": 2743,
-      "last_scan_at": "2026-05-02T12:32:03Z",
+      "last_scan_at": "2026-05-04T11:45:38Z",
       "last_scan_status": "ok",
       "last_scan_error": "",
       "last_scan_summary": {
         "folder_path": "/mnt/HDD2/Mediacenter/Filme",
-        "started_at": "2026-05-02T12:32:03Z",
-        "finished_at": "2026-05-02T12:32:06Z",
+        "started_at": "2026-05-04T11:45:38Z",
+        "finished_at": "2026-05-04T11:45:42Z",
         "status": "ok",
         "error": "",
         "file_count": 3377,
@@ -40,7 +40,9 @@
           "size_bytes": 230283,
           "modified_at": "2025-06-30T15:24:49Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "image"
+          "media_type": "image",
+          "media_kind": "image",
+          "title": "Bang Boom Bang - Ein todsicheres Ding (1999) stream deutsch anschauen 848x456-backdrop"
         },
         {
           "name": "Bang Boom Bang - Ein todsicheres Ding (1999) stream deutsch anschauen_848x456-logo.png",
@@ -51,7 +53,9 @@
           "size_bytes": 20641,
           "modified_at": "2025-06-30T15:24:48Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "image"
+          "media_type": "image",
+          "media_kind": "image",
+          "title": "Bang Boom Bang - Ein todsicheres Ding (1999) stream deutsch anschauen 848x456-logo"
         },
         {
           "name": "Bang Boom Bang - Ein todsicheres Ding (1999) stream deutsch anschauen_848x456-poster.jpg",
@@ -62,7 +66,9 @@
           "size_bytes": 144492,
           "modified_at": "2025-06-30T15:24:47Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "image"
+          "media_type": "image",
+          "media_kind": "image",
+          "title": "Bang Boom Bang - Ein todsicheres Ding (1999) stream deutsch anschauen 848x456-poster"
         },
         {
           "name": "Bang Boom Bang - Ein todsicheres Ding (1999) stream deutsch anschauen_848x456.mp4",
@@ -73,7 +79,9 @@
           "size_bytes": 686028876,
           "modified_at": "2025-05-24T18:04:50Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "movie",
+          "title": "Bang Boom Bang - Ein todsicheres Ding (1999) stream deutsch anschauen 848x456"
         },
         {
           "name": "Bang Boom Bang - Ein todsicheres Ding (1999) stream deutsch anschauen_848x456.nfo",
@@ -84,7 +92,9 @@
           "size_bytes": 6520,
           "modified_at": "2026-04-17T19:14:02Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "Bang Boom Bang - Ein todsicheres Ding (1999) stream deutsch anschauen 848x456"
         },
         {
           "name": "Böhse Onkelz - La Ultima Live in Berlin (2005).CD1-poster.jpg",
@@ -95,7 +105,9 @@
           "size_bytes": 1858875,
           "modified_at": "2025-06-30T15:26:55Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "image"
+          "media_type": "image",
+          "media_kind": "image",
+          "title": "Böhse Onkelz - La Ultima Live in Berlin (2005) CD1-poster"
         },
         {
           "name": "Ghost Rider; Spirit of Vengeance-backdrop.jpg",
@@ -106,7 +118,9 @@
           "size_bytes": 1076695,
           "modified_at": "2025-12-04T19:33:23Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "image"
+          "media_type": "image",
+          "media_kind": "image",
+          "title": "Ghost Rider; Spirit of Vengeance-backdrop"
         },
         {
           "name": "Ghost Rider; Spirit of Vengeance-landscape.jpg",
@@ -117,7 +131,9 @@
           "size_bytes": 1114583,
           "modified_at": "2025-12-04T19:33:23Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "image"
+          "media_type": "image",
+          "media_kind": "image",
+          "title": "Ghost Rider; Spirit of Vengeance-landscape"
         },
         {
           "name": "Ghost Rider; Spirit of Vengeance-logo.png",
@@ -128,7 +144,9 @@
           "size_bytes": 706029,
           "modified_at": "2025-12-04T19:33:23Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "image"
+          "media_type": "image",
+          "media_kind": "image",
+          "title": "Ghost Rider; Spirit of Vengeance-logo"
         },
         {
           "name": "Ghost Rider; Spirit of Vengeance-poster.jpg",
@@ -139,7 +157,9 @@
           "size_bytes": 373773,
           "modified_at": "2025-12-04T19:33:22Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "image"
+          "media_type": "image",
+          "media_kind": "image",
+          "title": "Ghost Rider; Spirit of Vengeance-poster"
         },
         {
           "name": "Psych - The Movie (2017)-backdrop.jpg",
@@ -150,7 +170,9 @@
           "size_bytes": 990248,
           "modified_at": "2025-06-30T15:27:40Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "image"
+          "media_type": "image",
+          "media_kind": "image",
+          "title": "Psych - The Movie (2017)-backdrop"
         },
         {
           "name": "Psych - The Movie (2017)-landscape.jpg",
@@ -161,7 +183,9 @@
           "size_bytes": 1218956,
           "modified_at": "2025-06-30T15:27:37Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "image"
+          "media_type": "image",
+          "media_kind": "image",
+          "title": "Psych - The Movie (2017)-landscape"
         },
         {
           "name": "Psych - The Movie (2017)-logo.png",
@@ -172,7 +196,9 @@
           "size_bytes": 1122006,
           "modified_at": "2025-06-30T15:27:36Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "image"
+          "media_type": "image",
+          "media_kind": "image",
+          "title": "Psych - The Movie (2017)-logo"
         },
         {
           "name": "Psych - The Movie (2017)-poster.jpg",
@@ -183,7 +209,9 @@
           "size_bytes": 683165,
           "modified_at": "2025-06-30T15:27:35Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "image"
+          "media_type": "image",
+          "media_kind": "image",
+          "title": "Psych - The Movie (2017)-poster"
         },
         {
           "name": "Psych - The Movie (2017).mkv",
@@ -194,7 +222,9 @@
           "size_bytes": 4946162116,
           "modified_at": "2018-10-25T16:08:04Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "movie",
+          "title": "Psych - The Movie (2017)"
         },
         {
           "name": "Psych - The Movie (2017).nfo",
@@ -205,7 +235,9 @@
           "size_bytes": 7392,
           "modified_at": "2026-04-17T19:17:50Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "Psych - The Movie (2017)"
         },
         {
           "name": "Böhse Onkelz - La Ultima Live in Berlin (2005).CD1.nfo",
@@ -216,7 +248,9 @@
           "size_bytes": 3221,
           "modified_at": "2026-04-18T07:14:58Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "Böhse Onkelz - La Ultima Live in Berlin (2005) CD1"
         },
         {
           "name": "Böhse Onkelz - Memento - Live in Berlin (2017)-backdrop.jpg",
@@ -227,7 +261,9 @@
           "size_bytes": 169207,
           "modified_at": "2025-06-30T15:27:15Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "image"
+          "media_type": "image",
+          "media_kind": "image",
+          "title": "Böhse Onkelz - Memento - Live in Berlin (2017)-backdrop"
         },
         {
           "name": "Böhse Onkelz - Memento - Live in Berlin (2017)-landscape.jpg",
@@ -238,7 +274,9 @@
           "size_bytes": 201904,
           "modified_at": "2025-06-30T15:27:15Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "image"
+          "media_type": "image",
+          "media_kind": "image",
+          "title": "Böhse Onkelz - Memento - Live in Berlin (2017)-landscape"
         },
         {
           "name": "Böhse Onkelz - Memento - Live in Berlin (2017)-poster.jpg",
@@ -249,14 +287,16 @@
           "size_bytes": 203797,
           "modified_at": "2025-06-30T15:27:15Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Filme",
-          "media_type": "image"
+          "media_type": "image",
+          "media_kind": "image",
+          "title": "Böhse Onkelz - Memento - Live in Berlin (2017)-poster"
         }
       ],
-      "last_panel_sync_at": "2026-05-02T12:32:03Z",
+      "last_panel_sync_at": "2026-05-04T11:45:38Z",
       "last_panel_sync_status": "ok",
       "last_panel_sync_error": "",
       "created_at": "2026-05-01T12:15:19Z",
-      "updated_at": "2026-05-02T12:32:12Z"
+      "updated_at": "2026-05-04T11:45:48Z"
     },
     {
       "id": "1a2eee0618cf42cd8f6348a9815db936",
@@ -268,13 +308,13 @@
       "media_count": 3997,
       "video_count": 1102,
       "image_count": 2704,
-      "last_scan_at": "2026-05-02T12:32:12Z",
+      "last_scan_at": "2026-05-04T11:45:48Z",
       "last_scan_status": "ok",
       "last_scan_error": "",
       "last_scan_summary": {
         "folder_path": "/mnt/HDD2/Mediacenter/Serien",
-        "started_at": "2026-05-02T12:32:12Z",
-        "finished_at": "2026-05-02T12:32:16Z",
+        "started_at": "2026-05-04T11:45:48Z",
+        "finished_at": "2026-05-04T11:45:54Z",
         "status": "ok",
         "error": "",
         "file_count": 5000,
@@ -298,7 +338,12 @@
           "size_bytes": 356467475,
           "modified_at": "2025-07-12T06:47:41Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E01",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 1
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E02.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -309,7 +354,12 @@
           "size_bytes": 315933224,
           "modified_at": "2025-07-12T06:47:42Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E02",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 2
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E03.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -320,7 +370,12 @@
           "size_bytes": 304612689,
           "modified_at": "2025-07-12T06:47:42Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E03",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 3
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E04.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -331,7 +386,12 @@
           "size_bytes": 383961878,
           "modified_at": "2025-07-12T06:47:42Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E04",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 4
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E10.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -342,7 +402,12 @@
           "size_bytes": 359338931,
           "modified_at": "2025-07-12T06:47:43Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E10",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 10
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E11.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -353,7 +418,12 @@
           "size_bytes": 279804059,
           "modified_at": "2025-07-12T06:47:43Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E11",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 11
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E12.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -364,7 +434,12 @@
           "size_bytes": 312987072,
           "modified_at": "2025-07-12T06:47:43Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E12",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 12
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E19.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -375,7 +450,12 @@
           "size_bytes": 239046441,
           "modified_at": "2025-07-12T06:47:44Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E19",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 19
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E20.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -386,7 +466,12 @@
           "size_bytes": 278469631,
           "modified_at": "2025-07-12T06:47:44Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E20",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 20
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E21.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -397,7 +482,12 @@
           "size_bytes": 323639233,
           "modified_at": "2025-07-12T06:47:44Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E21",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 21
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E28.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -408,7 +498,12 @@
           "size_bytes": 264534418,
           "modified_at": "2025-07-12T06:47:45Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E28",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 28
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E29.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -419,7 +514,12 @@
           "size_bytes": 286407769,
           "modified_at": "2025-07-12T06:47:45Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E29",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 29
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E30.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -430,7 +530,12 @@
           "size_bytes": 296391948,
           "modified_at": "2025-07-12T06:47:45Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E30",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 30
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E31.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -441,7 +546,12 @@
           "size_bytes": 283029876,
           "modified_at": "2025-07-12T06:47:46Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E31",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 31
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E32.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -452,7 +562,12 @@
           "size_bytes": 319234036,
           "modified_at": "2025-07-12T06:47:46Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E32",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 32
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E09.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -463,7 +578,12 @@
           "size_bytes": 319898511,
           "modified_at": "2025-07-12T06:47:43Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E09",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 9
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E13.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -474,7 +594,12 @@
           "size_bytes": 365842740,
           "modified_at": "2025-07-12T06:47:43Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E13",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 13
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E18.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -485,7 +610,12 @@
           "size_bytes": 405955064,
           "modified_at": "2025-07-12T06:47:44Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E18",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 18
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E22.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -496,7 +626,12 @@
           "size_bytes": 287562736,
           "modified_at": "2025-07-12T06:47:44Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E22",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 22
         },
         {
           "name": "Saber.Rider.und.die.Star.Sheriffs.S01E27.German.AC3.DL.1080p.BluRay.x265-FuN.mkv",
@@ -507,14 +642,19 @@
           "size_bytes": 276865339,
           "modified_at": "2025-07-12T06:47:45Z",
           "source_folder": "/mnt/HDD2/Mediacenter/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN S01E27",
+          "series_name": "1080Creli-Saber Rider und die Star Sheriffs S01 German AC3 DL 1080p BluRay x265-FuN",
+          "season_number": 1,
+          "episode_number": 27
         }
       ],
-      "last_panel_sync_at": "2026-05-02T12:32:12Z",
+      "last_panel_sync_at": "2026-05-04T11:45:48Z",
       "last_panel_sync_status": "ok",
       "last_panel_sync_error": "",
       "created_at": "2026-05-01T12:16:10Z",
-      "updated_at": "2026-05-02T12:32:27Z"
+      "updated_at": "2026-05-04T11:46:02Z"
     },
     {
       "id": "05f4ff40e5a84d828bf23b5406b50f72",
@@ -526,13 +666,13 @@
       "media_count": 11,
       "video_count": 9,
       "image_count": 0,
-      "last_scan_at": "2026-05-02T12:31:56Z",
+      "last_scan_at": "2026-05-04T11:45:31Z",
       "last_scan_status": "ok",
       "last_scan_error": "",
       "last_scan_summary": {
         "folder_path": "/mnt/data_wd/Filme",
-        "started_at": "2026-05-02T12:31:56Z",
-        "finished_at": "2026-05-02T12:31:56Z",
+        "started_at": "2026-05-04T11:45:31Z",
+        "finished_at": "2026-05-04T11:45:31Z",
         "status": "ok",
         "error": "",
         "file_count": 14,
@@ -556,7 +696,9 @@
           "size_bytes": 128,
           "modified_at": "2026-04-08T18:15:59Z",
           "source_folder": "/mnt/data_wd/Filme",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "Rapidgator net PREMIUM FULL SPEED"
         },
         {
           "name": "Ddownload.com PREMIUM FULL SPEED.url",
@@ -567,7 +709,9 @@
           "size_bytes": 128,
           "modified_at": "2026-04-08T18:15:59Z",
           "source_folder": "/mnt/data_wd/Filme",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "Ddownload com PREMIUM FULL SPEED"
         },
         {
           "name": "SUPPORT MY WORK.txt",
@@ -578,7 +722,9 @@
           "size_bytes": 766,
           "modified_at": "2026-04-08T18:15:59Z",
           "source_folder": "/mnt/data_wd/Filme",
-          "media_type": "document"
+          "media_type": "document",
+          "media_kind": "other",
+          "title": "SUPPORT MY WORK"
         },
         {
           "name": "UNTERSTÜTZT MEINE ARBEIT.txt",
@@ -589,7 +735,9 @@
           "size_bytes": 850,
           "modified_at": "2026-04-08T18:15:59Z",
           "source_folder": "/mnt/data_wd/Filme",
-          "media_type": "document"
+          "media_type": "document",
+          "media_kind": "other",
+          "title": "UNTERSTÜTZT MEINE ARBEIT"
         },
         {
           "name": "ghost-der.super.mario.galaxy.film.2026.TELESYNC.1080p.mkv",
@@ -600,7 +748,9 @@
           "size_bytes": 6223897512,
           "modified_at": "2026-04-07T09:13:33Z",
           "source_folder": "/mnt/data_wd/Filme",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "movie",
+          "title": "ghost-der super mario galaxy film 2026 TELESYNC 1080p"
         },
         {
           "name": "ghost-der.super.mario.galaxy.film.2026.TELESYNC.1080p.nfo",
@@ -611,7 +761,9 @@
           "size_bytes": 3646,
           "modified_at": "2026-04-07T09:26:54Z",
           "source_folder": "/mnt/data_wd/Filme",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "ghost-der super mario galaxy film 2026 TELESYNC 1080p"
         },
         {
           "name": "Der Super Mario Bros. Film (2023).mkv",
@@ -622,7 +774,9 @@
           "size_bytes": 1421869056,
           "modified_at": "2026-04-11T15:37:28Z",
           "source_folder": "/mnt/data_wd/Filme",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "movie",
+          "title": "Der Super Mario Bros Film (2023)"
         },
         {
           "name": "Police Academy 7 - Mission in Moskau (1994).mkv",
@@ -633,7 +787,9 @@
           "size_bytes": 2108114721,
           "modified_at": "2025-02-10T19:31:55Z",
           "source_folder": "/mnt/data_wd/Filme",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "movie",
+          "title": "Police Academy 7 - Mission in Moskau (1994)"
         },
         {
           "name": "Police Academy 6 - Widerstand zwecklos (1989).mkv",
@@ -644,7 +800,9 @@
           "size_bytes": 2140099231,
           "modified_at": "2025-02-10T18:51:36Z",
           "source_folder": "/mnt/data_wd/Filme",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "movie",
+          "title": "Police Academy 6 - Widerstand zwecklos (1989)"
         },
         {
           "name": "Police Academy 4 - Und jetzt geht’s rund (1987).mkv",
@@ -655,7 +813,9 @@
           "size_bytes": 2226158437,
           "modified_at": "2025-02-10T17:25:22Z",
           "source_folder": "/mnt/data_wd/Filme",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "movie",
+          "title": "Police Academy 4 - Und jetzt geht’s rund (1987)"
         },
         {
           "name": "Police Academy 2 - Jetzt geht’s erst richtig los (1985).mkv",
@@ -666,7 +826,9 @@
           "size_bytes": 2223233235,
           "modified_at": "2025-02-10T15:58:09Z",
           "source_folder": "/mnt/data_wd/Filme",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "movie",
+          "title": "Police Academy 2 - Jetzt geht’s erst richtig los (1985)"
         },
         {
           "name": "Police Academy 3 - und keiner kann sie bremsen (1986).mkv",
@@ -677,7 +839,9 @@
           "size_bytes": 2135832878,
           "modified_at": "2025-02-10T16:40:05Z",
           "source_folder": "/mnt/data_wd/Filme",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "movie",
+          "title": "Police Academy 3 - und keiner kann sie bremsen (1986)"
         },
         {
           "name": "Police Academy - Dümmer als die Polizei erlaubt (1984).mkv",
@@ -688,7 +852,9 @@
           "size_bytes": 2459474532,
           "modified_at": "2025-02-10T20:20:11Z",
           "source_folder": "/mnt/data_wd/Filme",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "movie",
+          "title": "Police Academy - Dümmer als die Polizei erlaubt (1984)"
         },
         {
           "name": "Police Academy 5 - Auftrag Miami Beach (1988).mkv",
@@ -699,14 +865,16 @@
           "size_bytes": 2291758953,
           "modified_at": "2025-02-10T18:11:41Z",
           "source_folder": "/mnt/data_wd/Filme",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "movie",
+          "title": "Police Academy 5 - Auftrag Miami Beach (1988)"
         }
       ],
-      "last_panel_sync_at": "2026-05-02T12:31:56Z",
+      "last_panel_sync_at": "2026-05-04T11:45:31Z",
       "last_panel_sync_status": "ok",
       "last_panel_sync_error": "",
       "created_at": "2026-05-01T12:16:34Z",
-      "updated_at": "2026-05-02T12:31:57Z"
+      "updated_at": "2026-05-04T11:45:32Z"
     },
     {
       "id": "6fa7060138604813bfe390f890cbb234",
@@ -718,13 +886,13 @@
       "media_count": 2099,
       "video_count": 2093,
       "image_count": 4,
-      "last_scan_at": "2026-05-02T12:31:57Z",
+      "last_scan_at": "2026-05-04T11:45:32Z",
       "last_scan_status": "ok",
       "last_scan_error": "",
       "last_scan_summary": {
         "folder_path": "/mnt/data_wd/Serien",
-        "started_at": "2026-05-02T12:31:57Z",
-        "finished_at": "2026-05-02T12:31:59Z",
+        "started_at": "2026-05-04T11:45:32Z",
+        "finished_at": "2026-05-04T11:45:33Z",
         "status": "ok",
         "error": "",
         "file_count": 2792,
@@ -748,7 +916,11 @@
           "size_bytes": 6558,
           "modified_at": "2019-05-09T19:57:59Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "tvs-lucifer-dl-azhd-x264-405",
+          "season_number": 4,
+          "episode_number": 5
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-405.mkv",
@@ -759,7 +931,12 @@
           "size_bytes": 499223852,
           "modified_at": "2019-05-09T19:53:25Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "Lucifer S04E05",
+          "series_name": "Lucifer",
+          "season_number": 4,
+          "episode_number": 5
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-401.mkv",
@@ -770,7 +947,12 @@
           "size_bytes": 427015261,
           "modified_at": "2019-05-09T19:52:47Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "Lucifer S04E01",
+          "series_name": "Lucifer",
+          "season_number": 4,
+          "episode_number": 1
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-401.nfo",
@@ -781,7 +963,11 @@
           "size_bytes": 6558,
           "modified_at": "2019-05-09T19:57:14Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "tvs-lucifer-dl-azhd-x264-401",
+          "season_number": 4,
+          "episode_number": 1
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-406.nfo",
@@ -792,7 +978,11 @@
           "size_bytes": 6558,
           "modified_at": "2019-05-09T19:58:11Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "tvs-lucifer-dl-azhd-x264-406",
+          "season_number": 4,
+          "episode_number": 6
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-406.mkv",
@@ -803,7 +993,12 @@
           "size_bytes": 479099476,
           "modified_at": "2019-05-09T19:53:34Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "Lucifer S04E06",
+          "series_name": "Lucifer",
+          "season_number": 4,
+          "episode_number": 6
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-403.mkv",
@@ -814,7 +1009,12 @@
           "size_bytes": 448226534,
           "modified_at": "2019-05-09T19:53:03Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "Lucifer S04E03",
+          "series_name": "Lucifer",
+          "season_number": 4,
+          "episode_number": 3
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-403.nfo",
@@ -825,7 +1025,11 @@
           "size_bytes": 6558,
           "modified_at": "2019-05-09T19:57:32Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "tvs-lucifer-dl-azhd-x264-403",
+          "season_number": 4,
+          "episode_number": 3
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-409.nfo",
@@ -836,7 +1040,11 @@
           "size_bytes": 6558,
           "modified_at": "2019-05-09T19:58:51Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "tvs-lucifer-dl-azhd-x264-409",
+          "season_number": 4,
+          "episode_number": 9
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-409.mkv",
@@ -847,7 +1055,12 @@
           "size_bytes": 439061184,
           "modified_at": "2019-05-09T19:54:03Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "Lucifer S04E09",
+          "series_name": "Lucifer",
+          "season_number": 4,
+          "episode_number": 9
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-404.nfo",
@@ -858,7 +1071,11 @@
           "size_bytes": 6558,
           "modified_at": "2019-05-09T19:57:41Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "tvs-lucifer-dl-azhd-x264-404",
+          "season_number": 4,
+          "episode_number": 4
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-404.mkv",
@@ -869,7 +1086,12 @@
           "size_bytes": 453629546,
           "modified_at": "2019-05-09T19:53:14Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "Lucifer S04E04",
+          "series_name": "Lucifer",
+          "season_number": 4,
+          "episode_number": 4
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-408.nfo",
@@ -880,7 +1102,11 @@
           "size_bytes": 6558,
           "modified_at": "2019-05-09T19:58:39Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "tvs-lucifer-dl-azhd-x264-408",
+          "season_number": 4,
+          "episode_number": 8
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-408.mkv",
@@ -891,7 +1117,12 @@
           "size_bytes": 456454525,
           "modified_at": "2019-05-09T19:53:51Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "Lucifer S04E08",
+          "series_name": "Lucifer",
+          "season_number": 4,
+          "episode_number": 8
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-410.mkv",
@@ -902,7 +1133,12 @@
           "size_bytes": 482840151,
           "modified_at": "2019-05-09T19:54:17Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "Lucifer S04E10",
+          "series_name": "Lucifer",
+          "season_number": 4,
+          "episode_number": 10
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-410.nfo",
@@ -913,7 +1149,11 @@
           "size_bytes": 6558,
           "modified_at": "2019-05-09T19:59:01Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "tvs-lucifer-dl-azhd-x264-410",
+          "season_number": 4,
+          "episode_number": 10
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-407.mkv",
@@ -924,7 +1164,12 @@
           "size_bytes": 382416427,
           "modified_at": "2019-05-09T19:53:42Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "Lucifer S04E07",
+          "series_name": "Lucifer",
+          "season_number": 4,
+          "episode_number": 7
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-407.nfo",
@@ -935,7 +1180,11 @@
           "size_bytes": 6558,
           "modified_at": "2019-05-09T19:58:27Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "tvs-lucifer-dl-azhd-x264-407",
+          "season_number": 4,
+          "episode_number": 7
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-402.mkv",
@@ -946,7 +1195,12 @@
           "size_bytes": 417515334,
           "modified_at": "2019-05-09T19:52:54Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "video"
+          "media_type": "video",
+          "media_kind": "series",
+          "title": "Lucifer S04E02",
+          "series_name": "Lucifer",
+          "season_number": 4,
+          "episode_number": 2
         },
         {
           "name": "tvs-lucifer-dl-azhd-x264-402.nfo",
@@ -957,14 +1211,18 @@
           "size_bytes": 6558,
           "modified_at": "2019-05-09T19:57:23Z",
           "source_folder": "/mnt/data_wd/Serien",
-          "media_type": "other"
+          "media_type": "other",
+          "media_kind": "other",
+          "title": "tvs-lucifer-dl-azhd-x264-402",
+          "season_number": 4,
+          "episode_number": 2
         }
       ],
-      "last_panel_sync_at": "2026-05-02T12:31:57Z",
+      "last_panel_sync_at": "2026-05-04T11:45:32Z",
       "last_panel_sync_status": "ok",
       "last_panel_sync_error": "",
       "created_at": "2026-05-01T12:17:12Z",
-      "updated_at": "2026-05-02T12:32:03Z"
+      "updated_at": "2026-05-04T11:45:38Z"
     }
   ]
 }
